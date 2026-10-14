@@ -1,0 +1,8 @@
+[
+  {
+    "url": "https://example.com/some-page",
+    "title": "A page written in by hand",
+    "description": "Use this for pages the crawler cannot read, such as sites drawn by JavaScript.",
+    "text": "The full readable text of the page goes here. Copy this file to manual.json and add one entry per page."
+  }
+]

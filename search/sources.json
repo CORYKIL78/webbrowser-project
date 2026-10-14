@@ -1,0 +1,10 @@
+{
+  "userAgent": "CirkleSearchBot/0.1",
+  "seeds": ["https://example.com/"],
+  "allowedHosts": ["example.com"],
+  "maxPages": 200,
+  "maxDepth": 3,
+  "delayMs": 1000,
+  "timeoutMs": 10000,
+  "manual": "sources/manual.json"
+}

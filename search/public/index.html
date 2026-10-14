@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cirkle Search</title>
+<meta name="description" content="Search Cirkle sites and knowledge. A prototype.">
+<link rel="search" type="application/opensearchdescription+xml" title="Cirkle Search" href="/opensearch.xml">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main>
+  <h1>Cirkle Search</h1>
+  <p class="sub">Search Cirkle sites and knowledge. Prototype.</p>
+  <form id="form" role="search" autocomplete="off">
+    <input id="q" name="q" type="search" placeholder="Search" aria-label="Search" maxlength="200" autofocus>
+    <button type="submit">Search</button>
+  </form>
+  <p id="status" class="status" role="status" aria-live="polite"></p>
+  <ol id="results" class="results"></ol>
+  <p class="fine">Your searches are not stored by this page. <a id="google" href="https://www.google.com/" rel="noopener noreferrer" hidden>Search the whole web with Google</a></p>
+</main>
+<script src="/app.js" defer></script>
+</body>
+</html>

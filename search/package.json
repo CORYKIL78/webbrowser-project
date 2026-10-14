@@ -1,0 +1,12 @@
+{
+  "name": "cirkle-search",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Prototype search over a small, chosen set of sites.",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "crawl": "node crawler/crawl.mjs",
+    "test": "node --test test/*.mjs"
+  }
+}

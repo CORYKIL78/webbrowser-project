@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Replace SEARCH_ORIGIN with the real address of your search page, for example https://search.example.org -->
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+  <ShortName>Cirkle Search</ShortName>
+  <Description>Search Cirkle sites and knowledge</Description>
+  <InputEncoding>UTF-8</InputEncoding>
+  <Url type="text/html" method="get" template="https://SEARCH_ORIGIN/?q={searchTerms}"/>
+</OpenSearchDescription>
