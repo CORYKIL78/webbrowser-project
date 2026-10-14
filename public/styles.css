@@ -1,6 +1,6 @@
 /* Glyde styles. Animations use transform and opacity only so weak devices stay smooth. */
 :root{
-  --accent:#6d5efc;--radius:16px;--scale:1;--speed:1;
+  --accent:#14a08c;--radius:16px;--scale:1;--speed:1;
   --bg:#0d0f1a;--panel:#161a2b;--panel2:#1d2238;--text:#eef0ff;--muted:#9aa1c4;--line:#2a3050;
   --ease:cubic-bezier(.22,.8,.24,1);
   --dur:calc(240ms / var(--speed));
@@ -17,7 +17,7 @@ button{cursor:pointer;border:0;background:none}
 .bg{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
 .bg i{position:absolute;width:60vmax;height:60vmax;border-radius:50%;filter:blur(70px);opacity:.28;background:var(--accent);will-change:transform}
 .bg i:first-child{left:-20vmax;top:-25vmax}
-.bg i:last-child{right:-25vmax;bottom:-30vmax;background:#19c8e6}
+.bg i:last-child{right:-25vmax;bottom:-30vmax}
 [data-bg=plain] .bg i{display:none}
 [data-bg=grid] .bg i{display:none}
 [data-bg=grid] .bg{background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:40px 40px;opacity:.5}

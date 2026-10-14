@@ -13,7 +13,7 @@
 
   /* ---------- settings ---------- */
   const DEFAULTS = {
-    theme: "dark", accent: "#6d5efc", radius: 16, scale: 100, bgStyle: "glow",
+    theme: "dark", accent: "#14a08c", radius: 16, scale: 100, bgStyle: "glow",
     motion: "auto", speed: 100, engine: "duckduckgo", suggest: true,
     showQuick: true, showExt: true, name: "", inApp: false, links: [], updatedAt: 0
   };
