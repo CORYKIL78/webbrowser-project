@@ -1,0 +1,24 @@
+# Glyde build configuration for Windows 64 bit, cross compiled on Linux.
+# UNTESTED. Based on Mozilla's documented approach for building Windows from Linux.
+# If the build fails, the error text tells us which line to change.
+
+ac_add_options --enable-application=browser
+ac_add_options --target=x86_64-pc-windows-msvc
+ac_add_options --with-branding=browser/branding/glyde
+
+# Lets mach download the compiler, the Windows SDK files and the other tools it needs.
+ac_add_options --enable-bootstrap
+
+ac_add_options --enable-release
+ac_add_options --enable-optimize
+ac_add_options --disable-debug
+ac_add_options --disable-tests
+ac_add_options --disable-crashreporter
+ac_add_options --disable-updater
+
+# The default browser agent and the Windows installer are left out for the first build.
+ac_add_options --disable-default-browser-agent
+
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-glyde-win
+
+# MOZILLA_OFFICIAL and MOZ_TELEMETRY_REPORTING are deliberately NOT set.
