@@ -96,6 +96,9 @@ jobs:
           cd firefox-*/
           ./mach --no-interactive bootstrap --application-choice browser
 
+      - name: Add the Rust Windows target
+        run: rustup target add x86_64-pc-windows-msvc
+
       - name: Build
         working-directory: build
         run: |
