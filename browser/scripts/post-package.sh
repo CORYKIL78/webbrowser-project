@@ -5,7 +5,7 @@ set -euo pipefail
 
 SRC="${1:?Usage: post-package.sh <firefox source dir>}"
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-PKG="$(ls "$SRC"/obj-glyde/dist/firefox-*.linux-x86_64.tar.* 2>/dev/null | head -n 1 || true)"
+PKG="$(ls "$SRC"/obj-glyde/dist/{glyde,firefox}-*.linux-x86_64.tar.* 2>/dev/null | head -n 1 || true)"
 test -n "$PKG" || { echo "No packaged Linux archive found under $SRC/obj-glyde/dist" >&2; exit 1; }
 
 WORK="$(mktemp -d)"

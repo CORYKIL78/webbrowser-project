@@ -5,6 +5,10 @@
 ac_add_options --enable-application=browser
 ac_add_options --with-branding=browser/branding/glyde
 
+# The program is called Glyde (glyde.exe on Windows, glyde on Linux), not Firefox.
+ac_add_options --with-app-name=glyde
+ac_add_options --with-app-basename=Glyde
+
 ac_add_options --enable-release
 ac_add_options --enable-optimize
 ac_add_options --disable-debug

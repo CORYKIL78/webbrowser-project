@@ -5,7 +5,7 @@ set -euo pipefail
 
 SRC="${1:?Usage: post-package-windows.sh <firefox source dir>}"
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-PKG="$(ls "$SRC"/obj-glyde-win/dist/firefox-*.win64.zip 2>/dev/null | head -n 1 || true)"
+PKG="$(ls "$SRC"/obj-glyde-win/dist/{glyde,firefox}-*.win64.zip 2>/dev/null | head -n 1 || true)"
 test -n "$PKG" || { echo "No packaged Windows zip found under $SRC/obj-glyde-win/dist" >&2; exit 1; }
 
 WORK="$(mktemp -d)"

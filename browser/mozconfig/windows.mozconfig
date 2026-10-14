@@ -6,6 +6,10 @@ ac_add_options --enable-application=browser
 ac_add_options --target=x86_64-pc-windows-msvc
 ac_add_options --with-branding=browser/branding/glyde
 
+# The program is called Glyde (glyde.exe on Windows, glyde on Linux), not Firefox.
+ac_add_options --with-app-name=glyde
+ac_add_options --with-app-basename=Glyde
+
 # Lets mach download the compiler, the Windows SDK files and the other tools it needs.
 ac_add_options --enable-bootstrap
 
