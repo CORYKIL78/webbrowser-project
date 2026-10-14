@@ -1,0 +1,8 @@
+{
+  "name": "Glyde",
+  "firefoxVersion": "158.0",
+  "sourceUrl": "https://archive.mozilla.org/pub/firefox/releases/{version}/source/firefox-{version}.source.tar.xz",
+  "checksumUrl": "https://archive.mozilla.org/pub/firefox/releases/{version}/SHA512SUMS",
+  "brandingDir": "browser/branding/glyde",
+  "colours": { "background": "#0e7c70", "foreground": "#f4efe6" }
+}

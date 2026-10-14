@@ -1,0 +1,21 @@
+# Glyde build configuration for Linux x86_64.
+# Only options that exist on every platform are used here. Windows only options
+# (for example the default browser agent) go in the Windows file when that build is added.
+
+ac_add_options --enable-application=browser
+ac_add_options --with-branding=browser/branding/glyde
+
+ac_add_options --enable-release
+ac_add_options --enable-optimize
+ac_add_options --disable-debug
+ac_add_options --disable-tests
+ac_add_options --disable-crashreporter
+
+# No update server exists yet, so the updater is not built.
+# Remove this line once Glyde hosts its own updates.
+ac_add_options --disable-updater
+
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-glyde
+
+# MOZILLA_OFFICIAL and MOZ_TELEMETRY_REPORTING are deliberately NOT set.
+# Without them the telemetry reporting code is not switched on in the build.

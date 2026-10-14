@@ -1,0 +1,61 @@
+name: Build Glyde
+
+# Not yet run. Firefox is a very large build: it needs a public repository (free larger
+# runners) or paid larger runners. See docs/BUILDING.md.
+on:
+  workflow_dispatch:
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 355
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free up disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /opt/hostedtoolcache/CodeQL
+          df -h /
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install branding dependency
+        run: pip install pillow
+
+      - name: Fetch and verify Firefox source
+        run: bash browser/scripts/fetch-source.sh
+
+      - name: Generate branding
+        run: python3 browser/scripts/make-branding.py build/firefox-*
+
+      - name: Apply Glyde configuration
+        run: bash browser/scripts/apply-config.sh build/firefox-* linux
+
+      - name: Bootstrap toolchains
+        working-directory: build
+        run: |
+          cd firefox-*
+          ./mach --no-interactive bootstrap --application-choice browser
+
+      - name: Build
+        working-directory: build
+        run: |
+          cd firefox-*
+          ./mach build
+
+      - name: Package
+        working-directory: build
+        run: |
+          cd firefox-*
+          ./mach package
+
+      - name: Add policies and create archive
+        run: bash browser/scripts/post-package.sh build/firefox-*
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: glyde-linux-x86_64
+          path: dist/glyde-linux-x86_64.tar.xz
+          if-no-files-found: error
