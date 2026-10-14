@@ -67,7 +67,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install tools for the Windows cross build
-        run: sudo apt-get update && sudo apt-get install -y zip unzip
+        run: sudo apt-get update && sudo apt-get install -y zip unzip msitools
 
       - name: Free up disk space
         run: |
