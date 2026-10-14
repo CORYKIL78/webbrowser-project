@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Glyde</title>
+<meta name="description" content="A fast, fully customisable browser hub that runs well on any device.">
+<meta name="theme-color" content="#0d0f1a">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Glyde">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<div class="bg" aria-hidden="true"><i></i><i></i></div>
+
+<header class="top">
+  <div class="brand"><img src="/logo.svg" alt="" width="28" height="28"><b>Glyde</b></div>
+  <nav class="tabs" id="tabs" aria-label="Tabs"></nav>
+  <button class="icon" id="newTab" aria-label="New tab" title="New tab (Ctrl+T)">+</button>
+  <button class="icon" id="openSettings" aria-label="Settings" title="Settings">&#9881;</button>
+  <button class="pill" id="account">Sign in</button>
+</header>
+
+<main id="view">
+  <section class="home" id="home">
+    <img class="hero-logo" src="/logo.svg" alt="" width="84" height="84">
+    <h1 id="greeting">Glyde</h1>
+    <form class="omni" id="omni" autocomplete="off">
+      <select id="engine" aria-label="Search engine"></select>
+      <input id="q" type="text" inputmode="search" enterkeyhint="go" placeholder="Search or type an address" aria-label="Search or type an address" autocapitalize="off" spellcheck="false">
+      <button type="submit" aria-label="Go">&#8594;</button>
+      <ul class="suggest" id="suggest" hidden></ul>
+    </form>
+    <div class="grid" id="quick"></div>
+    <div class="grid ext" id="ext"></div>
+  </section>
+
+  <section class="page" id="page" hidden>
+    <div class="bar">
+      <button class="icon" id="back" aria-label="Back to start">&#8592;</button>
+      <input id="addr" type="text" aria-label="Address" readonly>
+      <button class="pill" id="external">Open in browser</button>
+    </div>
+    <iframe id="frame" title="Page" referrerpolicy="no-referrer" sandbox="allow-scripts allow-forms allow-same-origin allow-popups"></iframe>
+    <p class="note" id="frameNote" hidden>This site does not allow itself to be shown inside another page. Use Open in browser.</p>
+  </section>
+</main>
+
+<aside class="sheet" id="sheet" aria-hidden="true">
+  <div class="sheet-in">
+    <header><h2>Settings</h2><button class="icon" id="closeSettings" aria-label="Close">&times;</button></header>
+
+    <h3>Look</h3>
+    <label>Theme
+      <select data-s="theme"><option value="dark">Dark</option><option value="light">Light</option><option value="auto">Match device</option></select>
+    </label>
+    <label>Accent colour <input type="color" data-s="accent"></label>
+    <label>Corner roundness <input type="range" min="0" max="28" data-s="radius"></label>
+    <label>Text size <input type="range" min="85" max="130" data-s="scale"></label>
+    <label>Background style
+      <select data-s="bgStyle"><option value="glow">Soft glow</option><option value="plain">Plain</option><option value="grid">Grid</option></select>
+    </label>
+
+    <h3>Motion</h3>
+    <label>Animations
+      <select data-s="motion"><option value="auto">Automatic (best for this device)</option><option value="full">Full</option><option value="lite">Lite</option><option value="off">Off</option></select>
+    </label>
+    <label>Animation speed <input type="range" min="50" max="200" data-s="speed"></label>
+
+    <h3>Search</h3>
+    <label>Default engine <select data-s="engine" id="engineSetting"></select></label>
+    <label class="row">Search suggestions <input type="checkbox" data-s="suggest"></label>
+    <label class="row">Try opening pages inside Glyde <input type="checkbox" data-s="inApp"></label>
+    <p class="hint">Many sites refuse to be shown inside another page. Leave this off to open them in a normal browser tab.</p>
+
+    <h3>Start page</h3>
+    <label class="row">Show quick links <input type="checkbox" data-s="showQuick"></label>
+    <label class="row">Show extensions <input type="checkbox" data-s="showExt"></label>
+    <label>Greeting name <input type="text" data-s="name" placeholder="Optional" maxlength="24"></label>
+
+    <h3>Sync</h3>
+    <p class="hint" id="syncState">Sign in with Cirkle ID to keep these settings on every device.</p>
+    <div class="btns">
+      <button class="pill" id="syncNow">Sync now</button>
+      <button class="pill ghost" id="resetAll">Reset</button>
+    </div>
+  </div>
+</aside>
+<div class="scrim" id="scrim" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="/config.js"></script>
+<script src="/app.js" defer></script>
+</body>
+</html>
