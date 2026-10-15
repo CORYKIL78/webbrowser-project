@@ -23,6 +23,7 @@ ac_add_options --disable-updater
 # The default browser agent and the Windows installer are left out for the first build.
 ac_add_options --disable-default-browser-agent
 
+mk_add_options MOZ_MAKE_FLAGS="-j3"
 mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-glyde-win
 
 # MOZILLA_OFFICIAL and MOZ_TELEMETRY_REPORTING are deliberately NOT set.

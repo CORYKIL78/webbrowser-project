@@ -12,10 +12,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Free up disk space
+      - name: Free up disk space and add swap
         run: |
-          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /opt/hostedtoolcache/CodeQL
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /opt/hostedtoolcache/CodeQL /usr/local/share/boost /usr/share/swift /usr/local/.ghcup
+          sudo docker image prune --all --force || true
+          sudo swapoff -a || true
+          sudo fallocate -l 8G /mnt/swapfile && sudo chmod 600 /mnt/swapfile && sudo mkswap /mnt/swapfile && sudo swapon /mnt/swapfile || true
           df -h /
+          free -h
+          nproc
 
       - uses: actions/setup-python@v5
         with:
@@ -43,6 +48,7 @@ jobs:
         working-directory: build
         run: |
           cd firefox-*/
+          (while true; do sleep 180; echo "[monitor] $(date +%T)"; df -h / | tail -1; free -m | sed -n 2,3p; done) &
           ./mach build
 
       - name: Package
@@ -69,10 +75,15 @@ jobs:
       - name: Install tools for the Windows cross build
         run: sudo apt-get update && sudo apt-get install -y zip unzip msitools
 
-      - name: Free up disk space
+      - name: Free up disk space and add swap
         run: |
-          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /opt/hostedtoolcache/CodeQL
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /opt/hostedtoolcache/CodeQL /usr/local/share/boost /usr/share/swift /usr/local/.ghcup
+          sudo docker image prune --all --force || true
+          sudo swapoff -a || true
+          sudo fallocate -l 8G /mnt/swapfile && sudo chmod 600 /mnt/swapfile && sudo mkswap /mnt/swapfile && sudo swapon /mnt/swapfile || true
           df -h /
+          free -h
+          nproc
 
       - uses: actions/setup-python@v5
         with:
@@ -103,6 +114,7 @@ jobs:
         working-directory: build
         run: |
           cd firefox-*/
+          (while true; do sleep 180; echo "[monitor] $(date +%T)"; df -h / | tail -1; free -m | sed -n 2,3p; done) &
           ./mach build
 
       - name: Package

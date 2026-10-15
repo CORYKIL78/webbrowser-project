@@ -19,6 +19,7 @@ ac_add_options --disable-crashreporter
 # Remove this line once Glyde hosts its own updates.
 ac_add_options --disable-updater
 
+mk_add_options MOZ_MAKE_FLAGS="-j3"
 mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-glyde
 
 # MOZILLA_OFFICIAL and MOZ_TELEMETRY_REPORTING are deliberately NOT set.
