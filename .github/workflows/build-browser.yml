@@ -17,7 +17,7 @@ jobs:
           sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /opt/hostedtoolcache/CodeQL /usr/local/share/boost /usr/share/swift /usr/local/.ghcup
           sudo docker image prune --all --force || true
           sudo swapoff -a || true
-          sudo fallocate -l 8G /mnt/swapfile && sudo chmod 600 /mnt/swapfile && sudo mkswap /mnt/swapfile && sudo swapon /mnt/swapfile || true
+          sudo fallocate -l 32G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile || true
           df -h /
           free -h
           nproc
@@ -46,10 +46,12 @@ jobs:
 
       - name: Build
         working-directory: build
+        env:
+          CARGO_BUILD_JOBS: "2"
         run: |
           cd firefox-*/
           (while true; do sleep 180; echo "[monitor] $(date +%T)"; df -h / | tail -1; free -m | sed -n 2,3p; done) &
-          ./mach build
+          ./mach build -j2
 
       - name: Package
         working-directory: build
@@ -80,7 +82,7 @@ jobs:
           sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /opt/hostedtoolcache/CodeQL /usr/local/share/boost /usr/share/swift /usr/local/.ghcup
           sudo docker image prune --all --force || true
           sudo swapoff -a || true
-          sudo fallocate -l 8G /mnt/swapfile && sudo chmod 600 /mnt/swapfile && sudo mkswap /mnt/swapfile && sudo swapon /mnt/swapfile || true
+          sudo fallocate -l 32G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile || true
           df -h /
           free -h
           nproc
@@ -112,10 +114,12 @@ jobs:
 
       - name: Build
         working-directory: build
+        env:
+          CARGO_BUILD_JOBS: "2"
         run: |
           cd firefox-*/
           (while true; do sleep 180; echo "[monitor] $(date +%T)"; df -h / | tail -1; free -m | sed -n 2,3p; done) &
-          ./mach build
+          ./mach build -j2
 
       - name: Package
         working-directory: build
