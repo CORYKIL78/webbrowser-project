@@ -36,26 +36,27 @@ for f in browser/app/module.ver config/module.ver browser/confvars.sh browser/in
   fi
 done
 
-# First run setup wizard: copy the page into the browser, register it in jar.mn so that
-# chrome://browser/content/glyde/welcome.html exists, and point the first run page at it.
+# Glyde pages (setup wizard and home page): copy them into the browser, register them in
+# jar.mn so that chrome://browser/content/glyde/<file> exists.
+VERSION="$(python3 -c "import json;print(json.load(open('$ROOT/browser/glyde.json'))['version'])")"
 WIZ="$SRC/browser/base/glyde"
 mkdir -p "$WIZ"
 cp "$ROOT"/browser/ui/welcome/welcome.* "$WIZ/"
+cp "$ROOT"/browser/ui/home/home.* "$ROOT/browser/ui/home/whatsnew.json" "$WIZ/"
+sed -i "s/{{VERSION}}/$VERSION/" "$WIZ/whatsnew.json"
 cp "$ROOT/pwa/logo.svg" "$WIZ/logo.svg"
 JARMN="$SRC/browser/base/jar.mn"
 test -f "$JARMN" || { echo "Missing $JARMN. Firefox layout has changed, update this script." >&2; exit 1; }
-if ! grep -q "content/browser/glyde/welcome.html" "$JARMN"; then
-  ANCHOR="$(grep -n '^ *content/browser/aboutDialog.xhtml' "$JARMN" | head -n 1 | cut -d: -f1 || true)"
-  test -n "$ANCHOR" || { echo "Could not find the anchor line in jar.mn. Update this script." >&2; exit 1; }
-  sed -i "${ANCHOR}a\\
-  content/browser/glyde/welcome.html (glyde/welcome.html)\\
-  content/browser/glyde/welcome.css (glyde/welcome.css)\\
-  content/browser/glyde/welcome.js (glyde/welcome.js)\\
-  content/browser/glyde/logo.svg (glyde/logo.svg)" "$JARMN"
-  echo "Registered the setup wizard in jar.mn"
-else
-  echo "Setup wizard already registered"
-fi
+for f in welcome.html welcome.css welcome.js home.html home.css home.js whatsnew.json logo.svg; do
+  if ! grep -q "content/browser/glyde/$f " "$JARMN"; then
+    ANCHOR="$(grep -n '^ *content/browser/aboutDialog.xhtml' "$JARMN" | head -n 1 | cut -d: -f1 || true)"
+    test -n "$ANCHOR" || { echo "Could not find the anchor line in jar.mn. Update this script." >&2; exit 1; }
+    sed -i "${ANCHOR}a\\
+  content/browser/glyde/$f (glyde/$f)" "$JARMN"
+    echo "Registered $f in jar.mn"
+  fi
+done
+echo "Glyde pages ready (version $VERSION)"
 
 # Smooth startup: the window fades and slides in. Appended to the shared browser stylesheet once.
 CSS="$SRC/browser/themes/shared/browser-shared.css"

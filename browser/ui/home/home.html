@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Glyde</title>
+<link rel="stylesheet" href="home.css">
+</head>
+<body>
+<main class="home">
+  <svg class="mark" viewBox="0 0 512 512" role="img" aria-label="Glyde logo">
+    <rect width="512" height="512" rx="112" fill="#0e7c70"/>
+    <path d="M96 280C150 190 206 190 256 256S362 322 416 232" fill="none" stroke="#f4efe6" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <h1>Welcome to Glyde</h1>
+  <p class="lead">Get started by opening a new tab and searching something.</p>
+  <p class="keys"><kbd>Ctrl</kbd> + <kbd>T</kbd> opens a new tab</p>
+
+  <section class="card update" id="update" hidden aria-live="polite">
+    <h2 id="update-title">An update is available</h2>
+    <p id="update-text"></p>
+    <a class="button" id="update-link" href="#" target="_blank" rel="noopener">Download</a>
+  </section>
+
+  <section class="card" aria-labelledby="new-title">
+    <div class="row">
+      <h2 id="new-title">What's new</h2>
+      <span class="badge" id="version">Glyde</span>
+    </div>
+    <ul id="new-list" class="list"></ul>
+  </section>
+
+  <section class="card small-card" aria-labelledby="upd-title">
+    <h2 id="upd-title">Updates</h2>
+    <p class="note">Glyde can ask GitHub whether a newer version exists. It sends no personal data, though GitHub can see your IP address, as any website can. It checks at most once a day and you can switch it off.</p>
+    <label class="check"><input type="checkbox" id="auto" checked> Check for updates when Glyde starts</label>
+    <p><button id="check-now" type="button">Check now</button> <span id="status" class="note"></span></p>
+  </section>
+</main>
+<script src="home.js"></script>
+</body>
+</html>

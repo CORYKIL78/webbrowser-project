@@ -53,3 +53,29 @@ pref("sidebar.verticalTabs", false);
 pref("browser.aboutwelcome.enabled", false);
 pref("startup.homepage_welcome_url", "chrome://browser/content/glyde/welcome.html");
 pref("startup.homepage_welcome_url.additional", "");
+
+// ---- Low power and low memory: aimed at weak laptops ----
+// Fewer web content processes means much less memory and CPU. Pages still load in parallel.
+pref("dom.ipc.processCount", 2);
+pref("dom.ipc.processPrelaunch.enabled", false);
+// Free memory from tabs nobody is looking at.
+pref("browser.tabs.unloadOnLowMemory", true);
+pref("browser.tabs.min_inactive_duration_before_unload", 300000);
+// Keep less in memory, and write the session to disk less often (less disk and CPU work).
+pref("browser.cache.memory.capacity", 65536);
+pref("browser.sessionhistory.max_total_viewers", 2);
+pref("browser.sessionstore.interval", 60000);
+// No videos or sounds that start by themselves.
+pref("media.autoplay.default", 1);
+// No background lookups for things that are not needed.
+pref("browser.discovery.enabled", false);
+pref("extensions.getAddons.cache.enabled", false);
+
+// ---- Faster page loads ----
+pref("network.http.pacing.requests.enabled", false);
+pref("network.http.max-persistent-connections-per-server", 8);
+pref("browser.startup.preXulSkeletonUI", true);
+
+// ---- Startup: land on the Glyde home page ----
+pref("browser.startup.homepage", "chrome://browser/content/glyde/home.html");
+pref("browser.startup.page", 1);

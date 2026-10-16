@@ -4,6 +4,15 @@ name: Build Glyde
 # runners) or paid larger runners. See docs/BUILDING.md.
 on:
   workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish the finished builds as a GitHub release (tick this for a real release)"
+        type: boolean
+        default: false
+      tag:
+        description: "Release tag, for example v0.1.0. Leave empty to use the version in browser/glyde.json"
+        type: string
+        default: ""
 
 jobs:
   linux:
@@ -34,6 +43,9 @@ jobs:
 
       - name: Generate branding
         run: python3 browser/scripts/make-branding.py build/firefox-*/
+
+      - name: Replace the Firefox name in visible text
+        run: python3 browser/scripts/rebrand-strings.py build/firefox-*/
 
       - name: Apply Glyde configuration
         run: bash browser/scripts/apply-config.sh build/firefox-*/ linux
@@ -100,6 +112,9 @@ jobs:
       - name: Generate branding
         run: python3 browser/scripts/make-branding.py build/firefox-*/
 
+      - name: Replace the Firefox name in visible text
+        run: python3 browser/scripts/rebrand-strings.py build/firefox-*/
+
       - name: Apply Glyde configuration
         run: bash browser/scripts/apply-config.sh build/firefox-*/ windows
 
@@ -135,3 +150,30 @@ jobs:
           name: glyde-windows-x86_64
           path: dist/glyde-windows-x86_64.zip
           if-no-files-found: error
+
+  release:
+    needs: [linux, windows]
+    if: ${{ inputs.publish }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: release-files
+          merge-multiple: true
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_INPUT: ${{ inputs.tag }}
+        run: |
+          VERSION="$(python3 -c "import json;print(json.load(open('browser/glyde.json'))['version'])")"
+          TAG="${TAG_INPUT:-v$VERSION}"
+          ls -l release-files
+          gh release create "$TAG" release-files/* \
+            --title "Glyde ${TAG#v}" \
+            --notes "Glyde ${TAG#v}. Unzip (Windows) or extract (Linux), then run glyde. Glyde is built on Mozilla open source technology and is not officially associated with Mozilla or its products." \
+            --prerelease

@@ -1,0 +1,30 @@
+:root{--bg1:#0a5a52;--bg2:#0e7c70;--ink:#f4efe6;--ink2:#cfe3df;--card:rgba(244,239,230,.08);--line:rgba(244,239,230,.22);--ease:cubic-bezier(.22,.8,.2,1)}
+*{box-sizing:border-box}
+html{background:var(--bg1)}
+body{margin:0;min-height:100vh;font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:radial-gradient(120% 120% at 20% 0%,var(--bg2),var(--bg1) 70%) fixed}
+.home{width:min(620px,100% - 40px);margin:0 auto;padding:64px 0 56px;text-align:center}
+.mark{width:96px;height:96px;filter:drop-shadow(0 12px 26px rgba(0,0,0,.28));animation:rise .7s var(--ease) both}
+h1{font-size:2.3rem;letter-spacing:-.02em;margin:.55em 0 .1em;animation:rise .7s .1s var(--ease) both}
+.lead{font-size:1.1rem;color:var(--ink2);margin:.2em 0 .6em;animation:rise .7s .2s var(--ease) both}
+.keys{color:var(--ink2);font-size:.92rem;animation:rise .7s .3s var(--ease) both}
+kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:.05em .5em;background:var(--card);font:inherit}
+.card{text-align:left;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:20px 0;animation:rise .7s .4s var(--ease) both}
+.card h2{font-size:1.1rem;margin:0}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.badge{border:1px solid var(--line);border-radius:999px;padding:.1em .8em;font-size:.85rem;color:var(--ink2)}
+.list{list-style:none;padding:0;margin:12px 0 0}
+.list li{padding:10px 0;border-top:1px solid var(--line)}
+.list li:first-child{border-top:0}
+.list strong{display:block}
+.list span{color:var(--ink2)}
+.note{color:var(--ink2);font-size:.92rem}
+.update{border-color:var(--ink)}
+.button,button{font:inherit;display:inline-block;cursor:pointer;text-decoration:none;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:12px;padding:.55em 1.2em}
+.button{background:var(--ink);color:#0a4a43;font-weight:600;border-color:var(--ink);margin-top:6px}
+button:hover,.button:hover{transform:translateY(-1px)}
+.check{display:flex;gap:10px;align-items:center;margin:10px 0}
+.check input{width:18px;height:18px;accent-color:#f4efe6}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+[hidden]{display:none!important}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}

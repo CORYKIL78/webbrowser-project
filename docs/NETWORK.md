@@ -12,6 +12,7 @@ A browser built on Firefox contacts some services on its own. For a privacy brow
 | Telemetry, studies, experiments | Usage reporting | Off. Not compiled in because Glyde is not an official Mozilla build |
 | Sponsored suggestions and new tab content | Adverts | Off |
 | Location service | Approximate location for websites | Off |
-| Update check | Security updates | Off until Glyde has its own update server |
+| Firefox update service | Automatic updates | Off. Glyde has no update server of its own |
+| Glyde update check (GitHub releases API) | Tells the person a newer Glyde exists, with a download link | On by default, once a day at most, no personal data sent beyond what any web request reveals (IP address). Switch off on the home page |
 
 Rule: nothing is added to the browser that contacts a server before this table says what it is for.

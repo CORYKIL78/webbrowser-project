@@ -27,13 +27,13 @@ UPDATED = "14 October 2026"
 
 # Details to fill in before the browser is released. They show highlighted on the page.
 FILL = {
-    "OPERATOR": "[Operator name]",
     "ADDRESS": "[Registered address]",
     "EMAIL": "[Contact email]",
     "PRIVACY_EMAIL": "[Privacy contact email]",
 }
 
 PLACEHOLDERS = {k: f'<mark class="fill">{html.escape(v)}</mark>' for k, v in FILL.items()}
+PLACEHOLDERS["OPERATOR"] = "Cirkle Development Group"
 PLACEHOLDERS["UPDATED"] = UPDATED
 PLACEHOLDERS["DRAFT"] = (
     '<p class="draft"><strong>Draft.</strong> This document has not been checked by a solicitor yet. '
@@ -68,7 +68,7 @@ TEMPLATE = """<!doctype html>
 <header class="top">
   <a class="brand" href="/"><img src="/logo.svg" alt="" width="30" height="30"><span>Glyde</span></a>
   <nav aria-label="Main">
-    <a href="/#building">Plans</a>
+    <a href="/#features">Features</a>
     <a href="/#download">Download</a>
     <a href="/legal">Legal</a>
   </nav>
