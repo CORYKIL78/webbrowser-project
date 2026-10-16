@@ -15,6 +15,17 @@ on:
         default: ""
 
 jobs:
+  checks:
+    # Quick (about a minute): tests for the Glyde modules, run before the long builds are worth waiting for.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --test browser/tests/modules.test.mjs
+
   linux:
     runs-on: ubuntu-24.04
     timeout-minutes: 355
@@ -172,6 +183,8 @@ jobs:
         run: |
           VERSION="$(python3 -c "import json;print(json.load(open('browser/glyde.json'))['version'])")"
           TAG="${TAG_INPUT:-v$VERSION}"
+          # Fingerprints that the in-browser updater checks before it installs anything.
+          (cd release-files && sha256sum glyde-* > SHA256SUMS.txt && cat SHA256SUMS.txt)
           ls -l release-files
           gh release create "$TAG" release-files/* \
             --title "Glyde ${TAG#v}" \

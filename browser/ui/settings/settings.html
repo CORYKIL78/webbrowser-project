@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src chrome:; img-src chrome: data:; style-src chrome: 'unsafe-inline'; connect-src 'none'">
+<title>Glyde settings</title>
+<link rel="stylesheet" href="chrome://browser/content/glyde/settings.css">
+</head>
+<body>
+<main>
+  <header class="top">
+    <img src="chrome://browser/content/glyde/logo.svg" alt="" width="44" height="44">
+    <div><h1>Glyde</h1><p class="sub">Settings that make the browser yours.</p></div>
+  </header>
+
+  <section class="card" id="account" aria-labelledby="h-account">
+    <h2 id="h-account">Cirkle ID</h2>
+    <div id="acct-out">
+      <p>Sign in with your Cirkle ID to keep your look and layout settings the same on every computer. They are encrypted before they leave this one.</p>
+      <button class="btn" id="signin">Sign in with Cirkle ID</button>
+    </div>
+    <div id="acct-in" hidden>
+      <div class="who"><span class="avatar" id="avatar" aria-hidden="true"></span><div><strong id="who-name"></strong><div class="muted" id="who-email"></div></div></div>
+      <div class="row">
+        <label class="switch"><input type="checkbox" id="sync-on"><span>Sync my settings</span></label>
+      </div>
+      <div id="sync-setup" hidden>
+        <label class="field">Sync passphrase
+          <input type="password" id="passphrase" autocomplete="new-password" minlength="8" placeholder="At least 8 characters">
+        </label>
+        <p class="muted small">This passphrase locks your settings. It is kept only on this computer, so Cirkle ID cannot read them. If you lose it, the stored copy cannot be recovered, only replaced.</p>
+        <button class="btn" id="save-pass">Save passphrase and sync</button>
+      </div>
+      <div id="sync-ready" hidden>
+        <button class="btn ghost" id="sync-now">Sync now</button>
+        <span class="muted small" id="sync-when"></span>
+        <button class="link" id="reset-remote">Forgot the passphrase? Replace the stored copy</button>
+      </div>
+      <p class="status" id="acct-status" role="status"></p>
+      <button class="link" id="signout">Sign out</button>
+    </div>
+    <p class="status" id="signin-status" role="status"></p>
+  </section>
+
+  <section class="card" aria-labelledby="h-look">
+    <h2 id="h-look">Look and feel</h2>
+
+    <fieldset class="seg" data-key="theme"><legend>Theme</legend>
+      <label><input type="radio" name="theme" value="system"><span>Match my system</span></label>
+      <label><input type="radio" name="theme" value="light"><span>Light</span></label>
+      <label><input type="radio" name="theme" value="dark"><span>Dark</span></label>
+    </fieldset>
+
+    <div class="field">Accent colour
+      <div class="swatches" id="swatches"></div>
+      <label class="inline">Custom <input type="color" id="accent-custom" value="#0e7c70"></label>
+    </div>
+
+    <label class="field">Roundness <output id="roundness-out"></output>
+      <input type="range" id="roundness" min="0" max="20" step="1">
+      <span class="scale"><span>Square</span><span>Round</span></span>
+    </label>
+    <div class="preview" id="preview" aria-hidden="true"><span class="p-tab">Tab</span><span class="p-bar">glyde.example</span><span class="p-btn">Button</span></div>
+
+    <label class="field">Interface size <output id="scale-out"></output>
+      <input type="range" id="interfaceScale" min="80" max="150" step="5">
+      <span class="muted small">Makes everything bigger or smaller, including menus and toolbars.</span>
+    </label>
+
+    <label class="field">Spacing
+      <select id="density">
+        <option value="compact">Compact (fits more on a small screen)</option>
+        <option value="normal">Normal</option>
+        <option value="roomy">Roomy (easier to tap or click)</option>
+      </select>
+    </label>
+
+    <label class="field">Menu and toolbar font
+      <select id="font">
+        <option value="system">Match my system</option>
+        <option value="humanist">Friendly sans-serif</option>
+        <option value="rounded">Rounded</option>
+        <option value="serif">Serif</option>
+        <option value="mono">Monospace</option>
+        <option value="custom">A font I have installed</option>
+      </select>
+    </label>
+    <label class="field" id="font-custom-wrap" hidden>Font name
+      <input type="text" id="fontCustom" maxlength="60" placeholder="For example: Lexend" spellcheck="false">
+    </label>
+  </section>
+
+  <section class="card" aria-labelledby="h-tabs">
+    <h2 id="h-tabs">Tabs</h2>
+    <div class="layouts" role="radiogroup" aria-label="Tab bar position" id="layouts">
+      <label class="layout"><input type="radio" name="tabs" value="top"><svg viewBox="0 0 80 52" aria-hidden="true"><rect class="frame" x="1" y="1" width="78" height="50" rx="5"/><rect class="tabs" x="5" y="5" width="70" height="7" rx="2"/><rect class="page" x="5" y="16" width="70" height="31" rx="2"/></svg><span>Top</span></label>
+      <label class="layout"><input type="radio" name="tabs" value="left"><svg viewBox="0 0 80 52" aria-hidden="true"><rect class="frame" x="1" y="1" width="78" height="50" rx="5"/><rect class="tabs" x="5" y="5" width="16" height="42" rx="2"/><rect class="page" x="25" y="5" width="50" height="42" rx="2"/></svg><span>Left side</span></label>
+      <label class="layout"><input type="radio" name="tabs" value="right"><svg viewBox="0 0 80 52" aria-hidden="true"><rect class="frame" x="1" y="1" width="78" height="50" rx="5"/><rect class="page" x="5" y="5" width="50" height="42" rx="2"/><rect class="tabs" x="59" y="5" width="16" height="42" rx="2"/></svg><span>Right side</span></label>
+    </div>
+    <p class="muted small">Bottom and floating tab bars are planned but not ready yet. Split view is built in to Glyde (look in the tab right-click menu).</p>
+  </section>
+
+  <section class="card" aria-labelledby="h-web">
+    <h2 id="h-web">Web pages</h2>
+    <label class="field">Text size on pages <output id="text-out"></output>
+      <input type="range" id="pageTextSize" min="80" max="200" step="5">
+    </label>
+    <label class="field">Page font
+      <select id="pageFont">
+        <option value="system">Match my system</option>
+        <option value="serif">Serif</option>
+        <option value="mono">Monospace</option>
+      </select>
+    </label>
+    <p class="muted small">Pages that choose their own fonts and sizes keep them.</p>
+  </section>
+
+  <section class="card" aria-labelledby="h-wall">
+    <h2 id="h-wall">Wallpaper</h2>
+    <p class="muted small">Shown behind the Glyde home page.</p>
+    <div class="walls" id="walls" role="radiogroup" aria-label="Wallpaper"></div>
+  </section>
+
+  <section class="card" aria-labelledby="h-upd">
+    <h2 id="h-upd">Updates</h2>
+    <p>You have Glyde <strong id="cur-ver"></strong>.</p>
+    <p class="status" id="upd-status" role="status">Not checked yet.</p>
+    <div class="progress" id="upd-progress" hidden><span id="upd-bar"></span></div>
+    <div class="row">
+      <button class="btn" id="upd-check">Check for updates</button>
+      <button class="btn" id="upd-download" hidden>Download update</button>
+      <button class="btn" id="upd-apply" hidden>Restart to update</button>
+      <a class="link" id="upd-notes" href="#" hidden>Release notes</a>
+    </div>
+    <p class="muted small">Updates are checked against a published list of file fingerprints before they are used.</p>
+  </section>
+
+  <section class="card" aria-labelledby="h-about">
+    <h2 id="h-about">About</h2>
+    <p class="muted small">Glyde is made by Cirkle Development Group. It is built on Mozilla open source technology and is not officially associated with Mozilla or its products.</p>
+  </section>
+</main>
+<script src="chrome://browser/content/glyde/settings.js"></script>
+</body>
+</html>

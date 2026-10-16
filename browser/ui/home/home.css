@@ -28,3 +28,5 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(-
 [hidden]{display:none!important}
 @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.has-wall .home{background:rgba(10,20,18,.62);border-radius:22px;padding:44px 30px;margin-top:48px;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}

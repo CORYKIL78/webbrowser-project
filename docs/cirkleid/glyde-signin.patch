@@ -1,0 +1,452 @@
+diff --git a/app/api/auth/verify/route.ts b/app/api/auth/verify/route.ts
+index 65412db..1ead198 100644
+--- a/app/api/auth/verify/route.ts
++++ b/app/api/auth/verify/route.ts
+@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
+   // If this login started as an OAuth handoff from another Cirkle app, finish it here:
+   // issue a one-time code and hand back the redirect URL for the client to bounce to.
+   if (pending.redirectState) {
+-    const { clientId, redirectUri, state } = pending.redirectState;
++    const { clientId, redirectUri, state, codeChallenge } = pending.redirectState;
+     const client = findOAuthClient(clientId);
+     if (client && isRedirectUriAllowed(clientId, redirectUri)) {
+       const authCode = newToken(28);
+@@ -64,7 +64,8 @@ export async function POST(req: NextRequest) {
+         code: authCode,
+         userId: user.id,
+         clientId,
+-        redirectUri
++        redirectUri,
++        ...(codeChallenge ? { codeChallenge } : {})
+       });
+       const url = new URL(redirectUri);
+       url.searchParams.set("code", authCode);
+diff --git a/app/api/auth/webauthn/authenticate/verify/route.ts b/app/api/auth/webauthn/authenticate/verify/route.ts
+index d873724..cd70452 100644
+--- a/app/api/auth/webauthn/authenticate/verify/route.ts
++++ b/app/api/auth/webauthn/authenticate/verify/route.ts
+@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
+   await setSessionCookie(sessionId);
+ 
+   if (challenge.redirectState) {
+-    const { clientId, redirectUri, state } = challenge.redirectState;
++    const { clientId, redirectUri, state, codeChallenge } = challenge.redirectState;
+     const client = findOAuthClient(clientId);
+     if (client && isRedirectUriAllowed(clientId, redirectUri)) {
+       const authCode = newToken(28);
+@@ -106,7 +106,8 @@ export async function POST(req: NextRequest) {
+         code: authCode,
+         userId: user.id,
+         clientId,
+-        redirectUri
++        redirectUri,
++        ...(codeChallenge ? { codeChallenge } : {})
+       });
+       const url = new URL(redirectUri);
+       url.searchParams.set("code", authCode);
+diff --git a/app/api/oauth/authorize/route.ts b/app/api/oauth/authorize/route.ts
+index 333f7ff..bee7b56 100644
+--- a/app/api/oauth/authorize/route.ts
++++ b/app/api/oauth/authorize/route.ts
+@@ -25,6 +25,12 @@ export async function GET(req: NextRequest) {
+   const redirectUri = searchParams.get("redirect_uri") || "";
+   const state = searchParams.get("state") || "";
+   const scope = searchParams.get("scope") || "openid profile";
++  // PKCE: desktop apps send a challenge instead of holding a secret. Only S256 is accepted.
++  const codeChallenge = searchParams.get("code_challenge") || "";
++  const method = searchParams.get("code_challenge_method") || "S256";
++  if (codeChallenge && (method !== "S256" || !/^[A-Za-z0-9_-]{43}$/.test(codeChallenge))) {
++    return NextResponse.json({ error: "code_challenge must be a base64url SHA-256 (method S256)." }, { status: 400 });
++  }
+ 
+   const client = findOAuthClient(clientId);
+   if (!client) {
+@@ -41,11 +47,12 @@ export async function GET(req: NextRequest) {
+     loginUrl.searchParams.set("redirect_uri", redirectUri);
+     loginUrl.searchParams.set("state", state);
+     loginUrl.searchParams.set("scope", scope);
++    if (codeChallenge) loginUrl.searchParams.set("code_challenge", codeChallenge);
+     return NextResponse.redirect(loginUrl);
+   }
+ 
+   const code = newToken(28);
+-  await createOAuthCode({ code, userId: user.id, clientId, redirectUri });
++  await createOAuthCode({ code, userId: user.id, clientId, redirectUri, ...(codeChallenge ? { codeChallenge } : {}) });
+ 
+   // Relay through a cosmetic "connecting" interstitial instead of bouncing straight back —
+   // the code is already minted, so this page does no auth work of its own, it just animates
+diff --git a/app/api/oauth/revoke/route.ts b/app/api/oauth/revoke/route.ts
+new file mode 100644
+index 0000000..3c5c608
+--- /dev/null
++++ b/app/api/oauth/revoke/route.ts
+@@ -0,0 +1,13 @@
++import { NextRequest, NextResponse } from "next/server";
++import { getBearerUser } from "@/lib/bearer";
++import { deleteAccessToken } from "@/lib/store";
++
++export const dynamic = "force-dynamic";
++
++/** Sign out of an app: forgets the bearer token on the server. */
++export async function POST(req: NextRequest) {
++  const auth = await getBearerUser(req);
++  if (!auth) return NextResponse.json({ ok: true }); // already gone, nothing to do
++  await deleteAccessToken(auth.token);
++  return NextResponse.json({ ok: true });
++}
+diff --git a/app/api/oauth/token/route.ts b/app/api/oauth/token/route.ts
+index 07a6dc0..dde601f 100644
+--- a/app/api/oauth/token/route.ts
++++ b/app/api/oauth/token/route.ts
+@@ -1,29 +1,52 @@
++import { createHash, timingSafeEqual } from "node:crypto";
+ import { NextRequest, NextResponse } from "next/server";
+-import { consumeOAuthCode, getUserById } from "@/lib/store";
+-import { newToken } from "@/lib/ids";
++import { consumeOAuthCode, createAccessToken, getUserById } from "@/lib/store";
+ 
+ /**
+- * Server-to-server code exchange, the second half of the OAuth handoff: the Cirkle app's
+- * backend calls this with the code it just received, and gets back the signed-in user's
+- * public profile plus a bearer token it can use for its own API calls.
++ * Server-to-server (or app-to-server) code exchange, the second half of the OAuth handoff.
+  *
+- * This is a minimal, single-use-code exchange rather than full OIDC token machinery —
+- * enough for "prove who signed in" without pulling in a token-refresh system nobody asked for.
++ * Body: { code, code_verifier?, client_id?, redirect_uri? }
++ *
++ * - If the code was issued with a PKCE challenge (desktop apps such as Glyde), the matching
++ *   code_verifier is required. This is what stops a stolen code from being used by someone else.
++ * - Codes issued without a challenge (the older Cirkle web apps) work exactly as before.
++ * - The returned bearer token is now saved (as a hash), so /api/oauth/userinfo and other
++ *   endpoints can check it. It lasts 30 days.
+  */
+ export async function POST(req: NextRequest) {
+   const body = await req.json().catch(() => null);
+   const code = typeof body?.code === "string" ? body.code : "";
++  const verifier = typeof body?.code_verifier === "string" ? body.code_verifier : "";
++  const clientId = typeof body?.client_id === "string" ? body.client_id : "";
++  const redirectUri = typeof body?.redirect_uri === "string" ? body.redirect_uri : "";
+   if (!code) return NextResponse.json({ error: "Missing code." }, { status: 400 });
+ 
+   const entry = await consumeOAuthCode(code);
+   if (!entry) return NextResponse.json({ error: "Invalid or expired code." }, { status: 400 });
+ 
++  if ((clientId && clientId !== entry.clientId) || (redirectUri && redirectUri !== entry.redirectUri)) {
++    return NextResponse.json({ error: "client_id or redirect_uri does not match the code." }, { status: 400 });
++  }
++
++  if (entry.codeChallenge) {
++    if (!/^[A-Za-z0-9._~-]{43,128}$/.test(verifier)) {
++      return NextResponse.json({ error: "Missing or malformed code_verifier." }, { status: 400 });
++    }
++    const expected = Buffer.from(entry.codeChallenge);
++    const actual = Buffer.from(createHash("sha256").update(verifier).digest("base64url"));
++    if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) {
++      return NextResponse.json({ error: "code_verifier does not match." }, { status: 400 });
++    }
++  }
++
+   const user = await getUserById(entry.userId);
+-  if (!user) return NextResponse.json({ error: "User not found." }, { status: 404 });
++  if (!user || user.status !== "active") return NextResponse.json({ error: "User not found." }, { status: 404 });
+ 
++  const { token, expiresIn } = await createAccessToken(user.id, entry.clientId);
+   return NextResponse.json({
+-    access_token: newToken(40),
++    access_token: token,
+     token_type: "bearer",
++    expires_in: expiresIn,
+     user: {
+       id: user.id,
+       email: user.email,
+diff --git a/app/api/oauth/userinfo/route.ts b/app/api/oauth/userinfo/route.ts
+new file mode 100644
+index 0000000..7983007
+--- /dev/null
++++ b/app/api/oauth/userinfo/route.ts
+@@ -0,0 +1,18 @@
++import { NextRequest, NextResponse } from "next/server";
++import { getBearerUser } from "@/lib/bearer";
++
++export const dynamic = "force-dynamic";
++
++/** Who does this token belong to? Used by apps (such as Glyde) to show "signed in as ...". */
++export async function GET(req: NextRequest) {
++  const auth = await getBearerUser(req);
++  if (!auth) return NextResponse.json({ error: "Invalid or expired token." }, { status: 401 });
++  const { user, entry } = auth;
++  return NextResponse.json({
++    id: user.id,
++    email: user.email,
++    name: user.name,
++    client_id: entry.clientId,
++    expires_at: entry.expiresAt
++  });
++}
+diff --git a/app/api/sync/settings/route.ts b/app/api/sync/settings/route.ts
+new file mode 100644
+index 0000000..bbf1616
+--- /dev/null
++++ b/app/api/sync/settings/route.ts
+@@ -0,0 +1,51 @@
++import { NextRequest, NextResponse } from "next/server";
++import { getBearerUser } from "@/lib/bearer";
++import { checkRateLimit } from "@/lib/rateLimit";
++import { deleteSyncBlob, getSyncBlob, putSyncBlob } from "@/lib/store";
++
++export const dynamic = "force-dynamic";
++
++const MAX_BLOB_CHARS = 200_000;
++
++/**
++ * App settings sync (used by Glyde). The app encrypts everything before it gets here, so this
++ * route only ever stores and returns an opaque string. Nothing here can read it.
++ *
++ *   GET    -> { rev, blob, updatedAt }   (404 if nothing has been saved yet)
++ *   PUT    -> body { baseRev, blob }     (409 with the current copy if baseRev is out of date)
++ *   DELETE -> removes the stored copy
++ */
++export async function GET(req: NextRequest) {
++  const auth = await getBearerUser(req);
++  if (!auth) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
++  const entry = await getSyncBlob(auth.user.id);
++  if (!entry) return NextResponse.json({ error: "Nothing saved yet." }, { status: 404 });
++  return NextResponse.json(entry);
++}
++
++export async function PUT(req: NextRequest) {
++  const auth = await getBearerUser(req);
++  if (!auth) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
++
++  const limit = await checkRateLimit("sync-write", auth.user.id, 120, 3600);
++  if (!limit.allowed) return NextResponse.json({ error: "Too many saves. Try again soon." }, { status: 429 });
++
++  const body = await req.json().catch(() => null);
++  const baseRev = Number.isInteger(body?.baseRev) && body.baseRev >= 0 ? (body.baseRev as number) : -1;
++  const blob = typeof body?.blob === "string" ? body.blob : "";
++  if (baseRev < 0) return NextResponse.json({ error: "baseRev must be a whole number, 0 or more." }, { status: 400 });
++  if (!blob || blob.length > MAX_BLOB_CHARS) {
++    return NextResponse.json({ error: `blob must be 1 to ${MAX_BLOB_CHARS} characters.` }, { status: 400 });
++  }
++
++  const result = await putSyncBlob(auth.user.id, baseRev, blob);
++  if (!result.ok) return NextResponse.json({ error: "Out of date.", current: result.current }, { status: 409 });
++  return NextResponse.json(result.entry);
++}
++
++export async function DELETE(req: NextRequest) {
++  const auth = await getBearerUser(req);
++  if (!auth) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
++  await deleteSyncBlob(auth.user.id);
++  return NextResponse.json({ ok: true });
++}
+diff --git a/app/login/LoginFlow.tsx b/app/login/LoginFlow.tsx
+index 761b19b..c6ddaa3 100644
+--- a/app/login/LoginFlow.tsx
++++ b/app/login/LoginFlow.tsx
+@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
+ import Link from "next/link";
+ import { startAuthentication } from "@simplewebauthn/browser";
+ 
+-type RedirectState = { clientId: string; redirectUri: string; state: string; scope: string } | null;
++type RedirectState = { clientId: string; redirectUri: string; state: string; scope: string; codeChallenge?: string } | null;
+ 
+ export default function LoginFlow({ redirectState }: { redirectState: RedirectState }) {
+   const [step, setStep] = useState<"credentials" | "code" | "success">("credentials");
+diff --git a/app/login/page.tsx b/app/login/page.tsx
+index aae9922..8772356 100644
+--- a/app/login/page.tsx
++++ b/app/login/page.tsx
+@@ -3,7 +3,7 @@ import LoginFlow from "./LoginFlow";
+ export default function LoginPage({
+   searchParams
+ }: {
+-  searchParams: { client_id?: string; redirect_uri?: string; state?: string; scope?: string };
++  searchParams: { client_id?: string; redirect_uri?: string; state?: string; scope?: string; code_challenge?: string };
+ }) {
+   const redirectState =
+     searchParams.client_id && searchParams.redirect_uri
+@@ -11,7 +11,8 @@ export default function LoginPage({
+           clientId: searchParams.client_id,
+           redirectUri: searchParams.redirect_uri,
+           state: searchParams.state || "",
+-          scope: searchParams.scope || "openid profile"
++          scope: searchParams.scope || "openid profile",
++          ...(searchParams.code_challenge ? { codeChallenge: searchParams.code_challenge } : {})
+         }
+       : null;
+ 
+diff --git a/lib/bearer.ts b/lib/bearer.ts
+new file mode 100644
+index 0000000..009818f
+--- /dev/null
++++ b/lib/bearer.ts
+@@ -0,0 +1,17 @@
++import { NextRequest } from "next/server";
++import { getAccessToken, getUserById } from "./store";
++import type { CirkleUser, OAuthAccessToken } from "./types";
++
++/** Reads "Authorization: Bearer <token>" and returns the token record plus the (active) user. */
++export async function getBearerUser(
++  req: NextRequest
++): Promise<{ token: string; entry: OAuthAccessToken; user: CirkleUser } | null> {
++  const header = req.headers.get("authorization") || "";
++  const match = /^Bearer ([A-Za-z0-9_-]{20,200})$/.exec(header);
++  if (!match) return null;
++  const entry = await getAccessToken(match[1]);
++  if (!entry) return null;
++  const user = await getUserById(entry.userId);
++  if (!user || user.status !== "active") return null;
++  return { token: match[1], entry, user };
++}
+diff --git a/lib/store.ts b/lib/store.ts
+index fa872a9..e16f1db 100644
+--- a/lib/store.ts
++++ b/lib/store.ts
+@@ -10,6 +10,8 @@
+  *                                  whatever happens to still be live
+  *   pendinglogin:<challengeId> -> PendingLogin (short TTL)
+  *   oauthcode:<code>           -> OAuthCode (short TTL)
++ *   oauthtoken:<sha256>        -> OAuthAccessToken (30 days; the token itself is never stored)
++ *   sync:<userId>              -> SyncBlob (end to end encrypted app settings, ciphertext only)
+  *   pwaccess:<requestId>       -> PasswordAccessRequest
+  *   pwaccessuser:<userId>      -> requestId of that user's most recent password-access request
+  *                                  (index, so the manager portal can poll "has this been granted yet?")
+@@ -36,6 +38,7 @@
+  */
+ 
+ import bcrypt from "bcryptjs";
++import { createHash } from "node:crypto";
+ import { kvDelete, kvGet, kvGetMany, kvList, kvPut } from "./kv";
+ import { newIdReference, newTicketRef, newToken, newEmailCode } from "./ids";
+ import type {
+@@ -47,7 +50,9 @@ import type {
+   DiscordLinkSession,
+   DiscordNotifySubscriber,
+   LoginHistoryEntry,
++  OAuthAccessToken,
+   OAuthCode,
++  SyncBlob,
+   PasscodeAccessRequest,
+   PasswordAccessRequest,
+   PendingEmailChange,
+@@ -68,6 +73,8 @@ const userSessionsKey = (userId: string) => `usersessions:${userId}`;
+ const historyKey = (userId: string) => `history:${userId}`;
+ const pendingKey = (id: string) => `pendinglogin:${id}`;
+ const codeKey = (code: string) => `oauthcode:${code}`;
++const accessTokenKey = (hash: string) => `oauthtoken:${hash}`;
++const syncKey = (userId: string) => `sync:${userId}`;
+ const pwAccessKey = (id: string) => `pwaccess:${id}`;
+ const pwAccessUserKey = (userId: string) => `pwaccessuser:${userId}`;
+ const passcodeAccessKey = (id: string) => `passcodeaccess:${id}`;
+@@ -191,6 +198,7 @@ export async function deleteUser(id: string): Promise<void> {
+   await Promise.all(sessionIds.map((sid) => deleteSession(sid, "revoked_by_admin")));
+   await kvDelete(userSessionsKey(id));
+   await kvDelete(historyKey(id));
++  await kvDelete(syncKey(id));
+   const credentialIds = await getUserCredentialIds(id);
+   await Promise.all(credentialIds.map((cid) => kvDelete(webAuthnCredKey(cid))));
+   await kvDelete(webAuthnCredUserKey(id));
+@@ -387,6 +395,59 @@ export async function consumeOAuthCode(code: string): Promise<OAuthCode | null>
+   return entry;
+ }
+ 
++// ---------- OAuth access tokens and app sync ----------
++
++const ACCESS_TOKEN_TTL_SECONDS = 60 * 60 * 24 * 30;
++
++export function hashAccessToken(token: string): string {
++  return createHash("sha256").update(token).digest("hex");
++}
++
++export async function createAccessToken(userId: string, clientId: string): Promise<{ token: string; expiresIn: number }> {
++  const token = newToken(48);
++  const now = Date.now();
++  const entry: OAuthAccessToken = {
++    userId,
++    clientId,
++    createdAt: new Date(now).toISOString(),
++    expiresAt: new Date(now + ACCESS_TOKEN_TTL_SECONDS * 1000).toISOString()
++  };
++  await kvPut(accessTokenKey(hashAccessToken(token)), entry, { expirationTtl: ACCESS_TOKEN_TTL_SECONDS });
++  return { token, expiresIn: ACCESS_TOKEN_TTL_SECONDS };
++}
++
++export async function getAccessToken(token: string): Promise<OAuthAccessToken | null> {
++  if (!token || token.length > 200) return null;
++  const entry = await kvGet<OAuthAccessToken>(accessTokenKey(hashAccessToken(token)));
++  if (!entry || new Date(entry.expiresAt) < new Date()) return null;
++  return entry;
++}
++
++export async function deleteAccessToken(token: string): Promise<void> {
++  await kvDelete(accessTokenKey(hashAccessToken(token)));
++}
++
++export async function getSyncBlob(userId: string): Promise<SyncBlob | null> {
++  return kvGet<SyncBlob>(syncKey(userId));
++}
++
++/** Writes the blob only if `baseRev` is still the stored revision (0 means "nothing stored yet"). */
++export async function putSyncBlob(
++  userId: string,
++  baseRev: number,
++  blob: string
++): Promise<{ ok: true; entry: SyncBlob } | { ok: false; current: SyncBlob | null }> {
++  const current = await getSyncBlob(userId);
++  if ((current?.rev ?? 0) !== baseRev) return { ok: false, current };
++  const entry: SyncBlob = { rev: baseRev + 1, blob, updatedAt: new Date().toISOString() };
++  await kvPut(syncKey(userId), entry);
++  return { ok: true, entry };
++}
++
++export async function deleteSyncBlob(userId: string): Promise<void> {
++  await kvDelete(syncKey(userId));
++}
++
+ // ---------- Password access requests (consent-gated password reset) ----------
+ 
+ export async function createPasswordAccessRequest(
+diff --git a/lib/types.ts b/lib/types.ts
+index b014da0..94213b9 100644
+--- a/lib/types.ts
++++ b/lib/types.ts
+@@ -86,6 +86,8 @@ export interface OAuthState {
+   redirectUri: string;
+   state: string;
+   scope: string;
++  /** PKCE (S256) challenge, set by desktop apps that cannot keep a client secret. */
++  codeChallenge?: string;
+ }
+ 
+ export interface OAuthCode {
+@@ -93,11 +95,28 @@ export interface OAuthCode {
+   userId: string;
+   clientId: string;
+   redirectUri: string;
++  /** PKCE (S256) challenge. When present the token exchange must prove the matching verifier. */
++  codeChallenge?: string;
+   createdAt: string;
+   expiresAt: string;
+   used: boolean;
+ }
+ 
++/** A bearer token handed out by /api/oauth/token. Only a SHA-256 hash of the token is stored. */
++export interface OAuthAccessToken {
++  userId: string;
++  clientId: string;
++  createdAt: string;
++  expiresAt: string;
++}
++
++/** End to end encrypted app settings. The server only ever holds ciphertext. */
++export interface SyncBlob {
++  rev: number;
++  blob: string;
++  updatedAt: string;
++}
++
+ export interface OAuthClient {
+   client_id: string;
+   name: string;

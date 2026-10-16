@@ -36,27 +36,36 @@ for f in browser/app/module.ver config/module.ver browser/confvars.sh browser/in
   fi
 done
 
-# Glyde pages (setup wizard and home page): copy them into the browser, register them in
-# jar.mn so that chrome://browser/content/glyde/<file> exists.
+# Glyde pages and modules: copy them into the browser and register them in jar.mn so that
+# chrome://browser/content/glyde/<file> exists. Pages: setup wizard, home page, settings.
+# Modules (.sys.mjs): appearance, Cirkle ID sign-in, settings sync, updates.
 VERSION="$(python3 -c "import json;print(json.load(open('$ROOT/browser/glyde.json'))['version'])")"
 WIZ="$SRC/browser/base/glyde"
-mkdir -p "$WIZ"
+mkdir -p "$WIZ/wallpapers"
 cp "$ROOT"/browser/ui/welcome/welcome.* "$WIZ/"
 cp "$ROOT"/browser/ui/home/home.* "$ROOT/browser/ui/home/whatsnew.json" "$WIZ/"
+cp "$ROOT"/browser/ui/settings/settings.* "$WIZ/"
+cp "$ROOT"/browser/ui/glyde/*.sys.mjs "$WIZ/"
+cp "$ROOT"/browser/ui/wallpapers/*.svg "$WIZ/wallpapers/"
 sed -i "s/{{VERSION}}/$VERSION/" "$WIZ/whatsnew.json"
+sed -i "s/__GLYDE_VERSION__/$VERSION/" "$WIZ/GlydeUpdate.sys.mjs"
 cp "$ROOT/pwa/logo.svg" "$WIZ/logo.svg"
 JARMN="$SRC/browser/base/jar.mn"
 test -f "$JARMN" || { echo "Missing $JARMN. Firefox layout has changed, update this script." >&2; exit 1; }
-for f in welcome.html welcome.css welcome.js home.html home.css home.js whatsnew.json logo.svg; do
-  if ! grep -q "content/browser/glyde/$f " "$JARMN"; then
-    ANCHOR="$(grep -n '^ *content/browser/aboutDialog.xhtml' "$JARMN" | head -n 1 | cut -d: -f1 || true)"
-    test -n "$ANCHOR" || { echo "Could not find the anchor line in jar.mn. Update this script." >&2; exit 1; }
+# New lines go after the aboutDialog.js line. (The aboutDialog.xhtml line starts with a "*" so it is not used.)
+ANCHOR="$(grep -nE '^[[:space:]]+content/browser/aboutDialog\.js[[:space:]]' "$JARMN" | head -n 1 | cut -d: -f1 || true)"
+test -n "$ANCHOR" || { echo "Could not find the anchor line in jar.mn. Update this script." >&2; exit 1; }
+(cd "$WIZ" && ls *.* wallpapers/*.svg) | while read -r f; do
+  if ! grep -qF "content/browser/glyde/$f " "$JARMN"; then
     sed -i "${ANCHOR}a\\
-  content/browser/glyde/$f (glyde/$f)" "$JARMN"
+        content/browser/glyde/$f (glyde/$f)" "$JARMN"
     echo "Registered $f in jar.mn"
   fi
 done
 echo "Glyde pages ready (version $VERSION)"
+
+# Glyde settings inside about:preferences, the start-up hook for the appearance engine.
+python3 "$ROOT/browser/scripts/patch-firefox.py" "$SRC"
 
 # Smooth startup: the window fades and slides in. Appended to the shared browser stylesheet once.
 CSS="$SRC/browser/themes/shared/browser-shared.css"

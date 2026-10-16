@@ -3,6 +3,17 @@
   var DAY = 24 * 60 * 60 * 1000;
   var current = '0.0.0';
 
+  // Wallpaper chosen in Glyde settings (only works inside Glyde, where this page can read preferences).
+  try {
+    var wall = Services.prefs.getStringPref('glyde.ui.wallpaper', 'none');
+    if (/^[a-z-]{1,30}$/.test(wall) && wall !== 'none') {
+      document.body.style.backgroundImage = 'url(wallpapers/' + wall + '.svg)';
+      document.body.style.backgroundSize = 'cover';
+      document.body.style.backgroundPosition = 'center';
+      document.body.classList.add('has-wall');
+    }
+  } catch (e) { /* plain home page */ }
+
   function store(key, value) {
     try { if (value === undefined) return localStorage.getItem(key); localStorage.setItem(key, value); } catch (e) { return null; }
   }
