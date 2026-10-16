@@ -28,11 +28,17 @@ UPDATED = "14 October 2026"
 # Details to fill in before the browser is released. They show highlighted on the page.
 FILL = {
     "ADDRESS": "[Registered address]",
-    "EMAIL": "[Contact email]",
-    "PRIVACY_EMAIL": "[Privacy contact email]",
+}
+
+# Contact addresses, shown as links.
+EMAILS = {
+    "EMAIL": "legal@teamcirkle.co.uk",  # legal, licence and trademark questions, terms
+    "PRIVACY_EMAIL": "mydata@teamcirkle.co.uk",  # data protection requests
+    "SUPPORT_EMAIL": "help@glyde.teamcirkle.co.uk",  # help, abuse and security reports
 }
 
 PLACEHOLDERS = {k: f'<mark class="fill">{html.escape(v)}</mark>' for k, v in FILL.items()}
+PLACEHOLDERS.update({k: f'<a href="mailto:{v}">{v}</a>' for k, v in EMAILS.items()})
 PLACEHOLDERS["OPERATOR"] = "Cirkle Development Group"
 PLACEHOLDERS["UPDATED"] = UPDATED
 PLACEHOLDERS["DRAFT"] = (
