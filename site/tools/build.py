@@ -26,20 +26,20 @@ OUT = SITE / "public"
 UPDATED = "14 October 2026"
 
 # Details to fill in before the browser is released. They show highlighted on the page.
-FILL = {
-    "ADDRESS": "[Registered address]",
-}
+FILL = {}  # Details still to fill in show highlighted on the page. None at the moment.
 
 # Contact addresses, shown as links.
 EMAILS = {
     "EMAIL": "legal@teamcirkle.co.uk",  # legal, licence and trademark questions, terms
     "PRIVACY_EMAIL": "mydata@teamcirkle.co.uk",  # data protection requests
     "SUPPORT_EMAIL": "help@glyde.teamcirkle.co.uk",  # help, abuse and security reports
+    "ORG_EMAIL": "info@teamcirkle.co.uk",  # Cirkle Development Group, general
 }
 
 PLACEHOLDERS = {k: f'<mark class="fill">{html.escape(v)}</mark>' for k, v in FILL.items()}
 PLACEHOLDERS.update({k: f'<a href="mailto:{v}">{v}</a>' for k, v in EMAILS.items()})
 PLACEHOLDERS["OPERATOR"] = "Cirkle Development Group"
+PLACEHOLDERS["ORG_SITE"] = '<a href="https://teamcirkle.co.uk">teamcirkle.co.uk</a>'
 PLACEHOLDERS["UPDATED"] = UPDATED
 PLACEHOLDERS["DRAFT"] = (
     '<p class="draft"><strong>Draft.</strong> This document has not been checked by a solicitor yet. '
@@ -68,6 +68,7 @@ TEMPLATE = """<!doctype html>
 <meta name="theme-color" content="#0e7c70">
 <link rel="icon" href="/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/site.css">
+<script src="/cookie.js" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -86,7 +87,7 @@ TEMPLATE = """<!doctype html>
   <div class="foot-in">
     <p class="moz">{moz}</p>
     <ul>{links}</ul>
-    <p class="small">&copy; 2026 {operator}. Glyde is for people aged 13 and over.</p>
+    <p class="small">&copy; 2026 {operator} (<a href="https://teamcirkle.co.uk">teamcirkle.co.uk</a>, <a href="mailto:info@teamcirkle.co.uk">info@teamcirkle.co.uk</a>). Glyde is for people aged 13 and over.</p>
   </div>
 </footer>
 </body>
