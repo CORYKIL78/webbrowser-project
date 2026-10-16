@@ -7,7 +7,6 @@
     "DisableFeedbackCommands": true,
     "NoDefaultBookmarks": true,
     "SkipTermsOfUse": true,
-    "OverrideFirstRunPage": "",
     "OverridePostUpdatePage": "",
     "UserMessaging": {
       "WhatsNew": false,

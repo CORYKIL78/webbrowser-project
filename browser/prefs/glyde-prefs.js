@@ -48,3 +48,8 @@ pref("geo.provider.network.url", "");
 // ---- Layout: Firefox's own vertical tabs are available but off by default ----
 pref("sidebar.revamp", true);
 pref("sidebar.verticalTabs", false);
+
+// First run: show the Glyde setup wizard instead of Firefox's welcome pages.
+pref("browser.aboutwelcome.enabled", false);
+pref("startup.homepage_welcome_url", "chrome://browser/content/glyde/welcome.html");
+pref("startup.homepage_welcome_url.additional", "");
