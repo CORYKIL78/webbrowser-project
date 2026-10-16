@@ -14,6 +14,14 @@ unzip -q "$PKG" -d "$WORK"
 
 APPDIR="$(find "$WORK" -maxdepth 1 -mindepth 1 -type d | head -n 1)"
 mkdir -p "$APPDIR/distribution"
+# The Visual C++ runtime files, so Glyde starts on PCs that do not have them installed.
+# They come from the Windows toolchain that mach downloaded for the cross build.
+COPIED=0
+for name in msvcp140.dll vcruntime140.dll vcruntime140_1.dll msvcp140_1.dll msvcp140_2.dll concrt140.dll; do
+  found="$(find "$HOME/.mozbuild" -ipath '*x64*' -iname "$name" 2>/dev/null | grep -i 'redist\|crt' | head -n 1 || true)"
+  if [ -n "$found" ] && [ ! -f "$APPDIR/$name" ]; then cp "$found" "$APPDIR/$name"; COPIED=$((COPIED+1)); fi
+done
+echo "Copied $COPIED Visual C++ runtime files"
 cp "$ROOT/browser/distribution/policies.json" "$APPDIR/distribution/policies.json"
 
 [ "$APPDIR" = "$WORK/glyde" ] || mv "$APPDIR" "$WORK/glyde"
