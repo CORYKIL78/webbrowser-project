@@ -16,7 +16,7 @@ APPDIR="$(find "$WORK" -maxdepth 1 -mindepth 1 -type d | head -n 1)"
 mkdir -p "$APPDIR/distribution"
 cp "$ROOT/browser/distribution/policies.json" "$APPDIR/distribution/policies.json"
 
-mv "$APPDIR" "$WORK/glyde"
+[ "$APPDIR" = "$WORK/glyde" ] || mv "$APPDIR" "$WORK/glyde"
 mkdir -p "$ROOT/dist"
 (cd "$WORK" && zip -qr "$ROOT/dist/glyde-windows-x86_64.zip" glyde)
 echo "Wrote $ROOT/dist/glyde-windows-x86_64.zip"
