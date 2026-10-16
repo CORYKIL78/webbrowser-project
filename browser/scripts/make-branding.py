@@ -27,9 +27,18 @@ BG = tuple(int(CFG["colours"]["background"].lstrip("#")[i:i + 2], 16) for i in (
 FG = tuple(int(CFG["colours"]["foreground"].lstrip("#")[i:i + 2], 16) for i in (0, 2, 4)) + (255,)
 LOGO_SVG = (ROOT / "pwa" / "logo.svg").read_text()
 
-# The wave, in the logo's 512 unit grid. Same curve as logo.svg.
-SEGMENTS = [((96, 280), (150, 190), (206, 190), (256, 256)),
-            ((256, 256), (306, 322), (362, 322), (416, 232))]
+# The "G" with a wavy top, in the logo's 512 unit grid (the 100 unit drawing in logo.svg times 5.12).
+K0 = 5.12
+_G = [((76, 33), (69, 25), (61, 39), (53, 31)),
+      ((53, 31), (46, 24), (37, 26), (31, 35)),
+      ((31, 35), (25, 44), (25, 58), (31, 66)),
+      ((31, 66), (39, 77), (58, 77), (67, 70)),
+      ((67, 70), (75, 64), (76, 57), (74, 50)),
+      ((74, 50), (68, 50), (60, 50), (53, 50))]
+SEGMENTS = [tuple((x * K0, y * K0) for x, y in seg) for seg in _G]
+SKY = (0x12, 0xa0, 0x8f, 255)
+GROUND = (0x0a, 0x5c, 0x53, 255)
+STROKE_R = 5 * K0
 
 
 def curve_points(n=300):
@@ -43,6 +52,12 @@ def curve_points(n=300):
     return pts
 
 
+def two_tone(w, h):
+    img = Image.new("RGBA", (w, h), SKY)
+    ImageDraw.Draw(img).rectangle([0, h // 2, w, h], fill=GROUND)
+    return img
+
+
 POINTS = curve_points()
 
 
@@ -52,14 +67,14 @@ def render(size, rounded=True, inset=1.0):
     scale = 4 if size < 512 else 2
     s = size * scale
     k = s / 512
-    img = Image.new("RGBA", (s, s), BG)
+    img = two_tone(s, s)
     if rounded:
         mask = Image.new("L", (s, s), 0)
         ImageDraw.Draw(mask).rounded_rectangle([0, 0, s - 1, s - 1], radius=int(112 * k), fill=255)
         img.putalpha(mask)
     layer = Image.new("RGBA", (s, s), (0, 0, 0, 0))
     d = ImageDraw.Draw(layer)
-    r = 20 * k
+    r = STROKE_R * k
     for x, y in POINTS:
         d.ellipse([x * k - r, y * k - r, x * k + r, y * k + r], fill=FG)
     if inset != 1.0:
@@ -74,7 +89,7 @@ def render(size, rounded=True, inset=1.0):
 
 def render_wide(w, h):
     """For non square images (installer banners, wide tiles): brand colour with a centred mark."""
-    img = Image.new("RGBA", (w, h), BG)
+    img = two_tone(w, h)
     side = int(min(w, h) * 0.6)
     mark = render(side, rounded=False, inset=1.0)
     img.alpha_composite(mark, ((w - side) // 2, (h - side) // 2))

@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Glyde logo">
-  <rect width="512" height="512" rx="112" fill="#0e7c70"/>
-  <path d="M96 280C150 190 206 190 256 256S362 322 416 232" fill="none" stroke="#f4efe6" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+  <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset=".5" stop-color="#12a08f"/><stop offset=".5" stop-color="#0a5c53"/></linearGradient></defs>
+  <rect width="512" height="512" rx="112" fill="url(#g)"/>
+  <g transform="scale(5.12)"><path d="M76 33C69 25 61 39 53 31C46 24 37 26 31 35C25 44 25 58 31 66C39 77 58 77 67 70C75 64 76 57 74 50H53" fill="none" stroke="#f4efe6" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></g>
 </svg>
