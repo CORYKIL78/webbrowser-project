@@ -23,6 +23,19 @@ else
   echo "Glyde preferences already present"
 fi
 
+# Company and vendor names that Windows shows in the file properties (and that name the profile folder).
+# Every change is printed, so a failed build can be traced back. Missing files are skipped.
+for f in browser/app/module.ver config/module.ver browser/confvars.sh browser/installer/windows/nsis/defines.nsi.in; do
+  if [ -f "$SRC/$f" ]; then
+    before="$(md5sum "$SRC/$f" | cut -d' ' -f1)"
+    sed -i -E 's/Mozilla (Corporation|Foundation)/Glyde/g; s/^(MOZ_APP_VENDOR)=.*/\1=Glyde/' "$SRC/$f"
+    after="$(md5sum "$SRC/$f" | cut -d' ' -f1)"
+    if [ "$before" != "$after" ]; then echo "Set vendor name in $f"; else echo "No vendor name to change in $f"; fi
+  else
+    echo "Skipped $f (not present)"
+  fi
+done
+
 # Our own patches, if any, applied in name order
 shopt -s nullglob
 for p in "$ROOT"/browser/patches/*.patch; do
