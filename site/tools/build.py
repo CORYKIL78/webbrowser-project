@@ -41,10 +41,7 @@ PLACEHOLDERS.update({k: f'<a href="mailto:{v}">{v}</a>' for k, v in EMAILS.items
 PLACEHOLDERS["OPERATOR"] = "Cirkle Development Group"
 PLACEHOLDERS["ORG_SITE"] = '<a href="https://teamcirkle.co.uk">teamcirkle.co.uk</a>'
 PLACEHOLDERS["UPDATED"] = UPDATED
-PLACEHOLDERS["DRAFT"] = (
-    '<p class="draft"><strong>Draft.</strong> This document has not been checked by a solicitor yet. '
-    "Fill in the highlighted details and have it reviewed before Glyde is released to the public.</p>"
-)
+PLACEHOLDERS["DRAFT"] = ""
 
 MOZ = "Built on Mozilla open source technology. Not officially associated with Mozilla or its products."
 
