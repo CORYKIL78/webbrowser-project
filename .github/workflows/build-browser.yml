@@ -98,7 +98,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install tools for the Windows cross build
-        run: sudo apt-get update && sudo apt-get install -y zip unzip msitools
+        run: sudo apt-get update && sudo apt-get install -y zip unzip msitools nsis
 
       - name: Free up disk space and add swap
         run: |
@@ -153,13 +153,15 @@ jobs:
           cd firefox-*/
           ./mach package
 
-      - name: Add policies and create zip
+      - name: Add policies, create the zip and the installer
         run: bash browser/scripts/post-package-windows.sh build/firefox-*/
 
       - uses: actions/upload-artifact@v4
         with:
           name: glyde-windows-x86_64
-          path: dist/glyde-windows-x86_64.zip
+          path: |
+            dist/glyde-windows-x86_64.zip
+            dist/glyde-windows-x86_64-setup.exe
           if-no-files-found: error
 
   release:

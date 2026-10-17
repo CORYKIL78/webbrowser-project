@@ -37,17 +37,16 @@ for f in browser/app/module.ver config/module.ver browser/confvars.sh browser/in
 done
 
 # Glyde pages and modules: copy them into the browser and register them in jar.mn so that
-# chrome://browser/content/glyde/<file> exists. Pages: setup wizard, home page, settings.
+# chrome://browser/content/glyde/<file> exists. Pages: new tab (home) page, settings. The welcome wizard
+# is a page on the Glyde website, not part of the browser.
 # Modules (.sys.mjs): appearance, Cirkle ID sign-in, settings sync, updates.
 VERSION="$(python3 -c "import json;print(json.load(open('$ROOT/browser/glyde.json'))['version'])")"
 WIZ="$SRC/browser/base/glyde"
 mkdir -p "$WIZ/wallpapers"
-cp "$ROOT"/browser/ui/welcome/welcome.* "$WIZ/"
-cp "$ROOT"/browser/ui/home/home.* "$ROOT/browser/ui/home/whatsnew.json" "$WIZ/"
+cp "$ROOT"/browser/ui/home/home.* "$WIZ/"
 cp "$ROOT"/browser/ui/settings/settings.* "$WIZ/"
 cp "$ROOT"/browser/ui/glyde/*.sys.mjs "$WIZ/"
 cp "$ROOT"/browser/ui/wallpapers/*.svg "$WIZ/wallpapers/"
-sed -i "s/{{VERSION}}/$VERSION/" "$WIZ/whatsnew.json"
 sed -i "s/__GLYDE_VERSION__/$VERSION/" "$WIZ/GlydeUpdate.sys.mjs"
 cp "$ROOT/pwa/logo.svg" "$WIZ/logo.svg"
 JARMN="$SRC/browser/base/jar.mn"
@@ -63,6 +62,11 @@ test -n "$ANCHOR" || { echo "Could not find the anchor line in jar.mn. Update th
   fi
 done
 echo "Glyde pages ready (version $VERSION)"
+
+# The Glyde theme (a built-in theme add-on). patch-firefox.py lists it in the theme config and jar.mn.
+THEME="$SRC/browser/themes/addons/glyde"
+mkdir -p "$THEME"
+cp "$ROOT"/browser/ui/theme/* "$THEME/"
 
 # Glyde settings inside about:preferences, the start-up hook for the appearance engine.
 python3 "$ROOT/browser/scripts/patch-firefox.py" "$SRC"

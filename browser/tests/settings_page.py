@@ -15,14 +15,14 @@ for f in ("settings.html", "settings.css", "settings.js"):
 shutil.copytree(ROOT / "browser/ui/wallpapers", site / "wallpapers")
 
 MOCK = r"""
-const DEFAULTS = {theme:'system',accent:'#0e7c70',roundness:8,interfaceScale:100,density:'normal',font:'system',fontCustom:'',pageFont:'system',pageTextSize:100,tabs:'top',wallpaper:'none'};
+const DEFAULTS = {theme:'glyde',accent:'#0e7c70',roundness:8,interfaceScale:100,density:'normal',font:'system',fontCustom:'',pageFont:'system',pageTextSize:100,tabs:'top',wallpaper:'glide-lines'};
 const state = {...DEFAULTS}; const L = new Set(); window.__calls = [];
 const acct = {signedIn:false,id:'',name:'',email:''}; let pass = false; const sync = {enabled:false,lastSynced:0};
 let upd = {phase:'idle',progress:0,error:'',info:null,file:''}; const UL = new Set();
 const setUpd = p => { upd = {...upd, ...p}; UL.forEach(f => f(upd)); };
 const mods = {
  'GlydeUI.sys.mjs': {WALLPAPERS:['glide-lines','dusk-hills','soft-glow','contours','night-arcs','paper-waves'],
-   GlydeUI:{values:()=>({...state}),set(k,v){window.__calls.push(['set',k,v]);state[k]=v;L.forEach(f=>f());},onChange(f){L.add(f)}}},
+   GlydeUI:{openWelcome(){window.__welcome=true},values:()=>({...state}),set(k,v){window.__calls.push(['set',k,v]);state[k]=v;L.forEach(f=>f());},onChange(f){L.add(f)}}},
  'GlydeAccount.sys.mjs': {GlydeAccount:{status:()=>({...acct}),async signIn(){ if(window.__signinFails) throw new Error('Sign-in was cancelled.'); Object.assign(acct,{signedIn:true,id:'CID-1',name:'Sam',email:'sam@example.test'}); return acct;},async signOut(){Object.assign(acct,{signedIn:false})},async verify(){return acct.signedIn}}},
  'GlydeSync.sys.mjs': {GlydeSync:{status:()=>({...sync}),hasPassphrase:async()=>pass,setEnabled(b){sync.enabled=b},async setPassphrase(p){ if(p.length<8) throw new Error('Use a sync passphrase of at least 8 characters.'); pass=true},async syncNow(){sync.lastSynced=Date.now();return 'uploaded'},async resetRemote(){}}},
  'GlydeUpdate.sys.mjs': {GlydeUpdate:{version:'0.1.0',get state(){return upd},onChange(f){UL.add(f)},async check(){setUpd({phase:'checking'});await new Promise(r=>setTimeout(r,30));setUpd({phase:'available',info:{version:'0.2.0',page:'#',asset:{name:'x'},sumsUrl:'u'}})},async download(){for(const p of [10,60]){setUpd({phase:'downloading',progress:p});await new Promise(r=>setTimeout(r,20))}setUpd({phase:'verifying',progress:100});await new Promise(r=>setTimeout(r,20));setUpd({phase:'ready',file:'f'})},async apply(){window.__applied=true;return ''}}},
@@ -50,7 +50,7 @@ with sync_playwright() as p:
         pg.on("console", lambda m: errs.append(m.text) if m.type == "error" else None)
         pg.add_init_script(MOCK)
         pg.goto(url)
-        pg.wait_for_selector("#walls .wall")
+        pg.wait_for_selector("#run-welcome")
         if scheme == "light":
             # look and feel
             pg.fill("#roundness", "0") if False else pg.eval_on_selector("#roundness", "e=>{e.value=0;e.dispatchEvent(new Event('input'))}")
@@ -62,8 +62,11 @@ with sync_playwright() as p:
             check(pg.evaluate("window.__calls.some(c=>c[1]=='tabs'&&c[2]=='right')"), "tab layout calls set")
             pg.select_option("#font", "custom")
             check(pg.is_visible("#font-custom-wrap"), "custom font box appears")
-            pg.check("input[name=wallpaper][value=dusk-hills]", force=True)
-            check(pg.evaluate("window.__calls.some(c=>c[1]=='wallpaper'&&c[2]=='dusk-hills')"), "wallpaper calls set")
+            pg.check("input[name=theme][value=dark]", force=True)
+            check(pg.evaluate("window.__calls.some(c=>c[1]=='theme'&&c[2]=='dark')"), "theme calls set")
+            check(pg.is_visible("input[name=theme][value=glyde]", timeout=500) or pg.locator("input[name=theme][value=glyde]").count() == 1, "Glyde theme choice exists")
+            pg.click("#run-welcome")
+            check(pg.evaluate("window.__welcome===true"), "welcome tour button calls openWelcome")
             # account
             pg.click("#signin")
             pg.wait_for_selector("#acct-in:not([hidden])")

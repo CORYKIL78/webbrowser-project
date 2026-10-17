@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Welcome to Glyde</title>
+<meta name="description" content="Set up Glyde in a minute.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0a5c53">
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/welcome.css">
+<script src="/welcome.js" defer></script>
+</head>
+<body>
+<div class="shell" id="shell" data-step="1">
+  <aside class="side">
+    <a class="logo" href="/" aria-label="Glyde home"><img src="/logo.svg" alt="" width="64" height="64"></a>
+    <h1>Welcome to&nbsp;Glyde</h1>
+    <p class="tag">A fast, private browser with Google as its only search engine.</p>
+    <ol class="steps" aria-label="Setup steps">
+      <li data-for="1"><span>1</span>Your privacy</li>
+      <li data-for="2"><span>2</span>Terms and policy</li>
+      <li data-for="3"><span>3</span>Ready</li>
+    </ol>
+    <p class="made">Made by Cirkle Development Group</p>
+  </aside>
+
+  <main class="pane" aria-live="polite">
+    <section class="step" data-step="1">
+      <h2>Your privacy</h2>
+      <p class="lead">Glyde is built to keep your browsing yours. Here is what that means.</p>
+      <ul class="points">
+        <li><strong>No telemetry.</strong> Glyde does not send usage data, crash reports or studies.</li>
+        <li><strong>No adverts or sponsored shortcuts.</strong> Nothing is paid to appear in your browser.</li>
+        <li><strong>Tracking protection on.</strong> Strict blocking, HTTPS only mode and Global Privacy Control are on by default.</li>
+        <li><strong>Update checks.</strong> Glyde asks GitHub whether a newer version exists. You can turn this off in settings.</li>
+        <li><strong>Google is the only search engine.</strong> Google sees what you search for, under its own privacy policy. Glyde cannot hide that.</li>
+        <li><strong>Private windows</strong> leave no history on this device. Websites and your network can still see your activity.</li>
+      </ul>
+      <div class="nav"><span></span><button class="primary" type="button" data-go="2">Continue</button></div>
+    </section>
+
+    <section class="step" data-step="2" hidden>
+      <h2>Terms and privacy policy</h2>
+      <p class="lead">Please read these short summaries. The full documents are linked below them.</p>
+      <div class="docs">
+        <div class="doc" tabindex="0" aria-label="Terms summary">
+          <h3>Terms of Use, in short</h3>
+          <ul>
+            <li>Glyde is for people aged 13 and over.</li>
+            <li>You are responsible for what you do online and for following the law.</li>
+            <li>Glyde is provided as it is, without guarantees, while it is in early development.</li>
+            <li>Glyde is built on Mozilla open source technology. It is not officially associated with Mozilla or its products.</li>
+            <li>Optional online services (Cirkle ID and sync) have their own rules.</li>
+          </ul>
+          <p><a href="/legal/terms-of-use" target="_blank" rel="noopener">Full Terms of Use</a> &middot; <a href="/legal/terms-of-service" target="_blank" rel="noopener">Terms of Service</a></p>
+        </div>
+        <div class="doc" tabindex="0" aria-label="Privacy summary">
+          <h3>Privacy Policy, in short</h3>
+          <ul>
+            <li>Your browsing data stays on your device.</li>
+            <li>If you turn on sync, your settings are encrypted on your device before they leave it.</li>
+            <li>We do not sell personal data or build advertising profiles.</li>
+            <li>You can ask to see or delete any data we hold about you.</li>
+          </ul>
+          <p><a href="/legal/privacy" target="_blank" rel="noopener">Full Privacy Policy</a></p>
+        </div>
+      </div>
+      <div class="checks">
+        <label class="check"><input type="checkbox" id="age"> I am 13 or over.</label>
+        <label class="check"><input type="checkbox" id="terms"> I agree to the Terms.</label>
+        <label class="check"><input type="checkbox" id="privacy"> I have read the Privacy Policy.</label>
+      </div>
+      <div class="nav"><button class="ghost" type="button" data-go="1">Back</button><button class="primary" type="button" id="agree" disabled>Agree and continue</button></div>
+      <p class="small"><button class="link" type="button" id="decline">I do not agree</button></p>
+    </section>
+
+    <section class="step" data-step="3" hidden>
+      <svg class="tick" viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="34" fill="none" stroke-width="5" pathLength="1"/><path d="M26 41l10 10 20-22" fill="none" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" pathLength="1"/></svg>
+      <h2>You are ready</h2>
+      <p class="lead">Settings are under the menu. You can change everything later, including the look of Glyde and the new tab page.</p>
+      <div class="nav"><span></span><a class="primary" href="/welcome/done">Start browsing</a></div>
+    </section>
+
+    <section class="step" data-step="4" hidden>
+      <h2>Glyde needs your agreement</h2>
+      <p class="lead">Glyde cannot be used without agreeing to the Terms and Privacy Policy. If you do not agree, please close this window.</p>
+      <div class="nav"><button class="ghost" type="button" data-go="2">Go back</button><span></span></div>
+    </section>
+  </main>
+</div>
+</body>
+</html>

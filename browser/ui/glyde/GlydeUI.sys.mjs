@@ -11,8 +11,14 @@
 
 const PREF = "glyde.ui.";
 
+// The Glyde new tab page ships inside the browser. The welcome wizard is a page on the Glyde website.
+export const HOME_URL = "chrome://browser/content/glyde/home.html";
+export const WELCOME_URL = "https://glyde.teamcirkle.co.uk/welcome";
+export const WELCOME_DONE_URL = "https://glyde.teamcirkle.co.uk/welcome/done";
+const GLYDE_THEME_ID = "glyde-theme@teamcirkle.co.uk";
+
 export const DEFAULTS = Object.freeze({
-  theme: "system", //        system | light | dark
+  theme: "glyde", //         glyde | system | light | dark
   accent: "#0e7c70", //      any #rrggbb colour
   roundness: 8, //           0 (square) to 20 (very round), in pixels
   interfaceScale: 100, //    80 to 150, percent
@@ -22,7 +28,7 @@ export const DEFAULTS = Object.freeze({
   pageFont: "system", //     system | serif | mono
   pageTextSize: 100, //      80 to 200, percent
   tabs: "top", //            top | left | right
-  wallpaper: "none", //      none or one of WALLPAPERS
+  wallpaper: "glide-lines", // none or one of WALLPAPERS
 });
 
 export const WALLPAPERS = Object.freeze([
@@ -42,6 +48,7 @@ const FONT_STACKS = {
 };
 
 const THEME_IDS = {
+  glyde: GLYDE_THEME_ID,
   system: "default-theme@mozilla.org",
   light: "firefox-compact-light@mozilla.org",
   dark: "firefox-compact-dark@mozilla.org",
@@ -56,7 +63,7 @@ export function sanitise(key, value) {
   const d = DEFAULTS[key];
   switch (key) {
     case "theme":
-      return ["system", "light", "dark"].includes(value) ? value : d;
+      return ["glyde", "system", "light", "dark"].includes(value) ? value : d;
     case "accent":
       return /^#[0-9a-fA-F]{6}$/.test(String(value)) ? String(value).toLowerCase() : d;
     case "roundness":
@@ -104,12 +111,16 @@ export function buildCss(v) {
   css.push(`  --tab-border-radius: ${r}px !important;`);
   css.push(`  --toolbarbutton-border-radius: ${r}px !important;`);
   css.push(`  --urlbar-border-radius: ${r}px !important;`);
-  if (v.accent !== DEFAULTS.accent) {
-    css.push(`  --color-accent-primary: ${v.accent} !important;`);
-    css.push(`  --color-accent-primary-hover: ${darken(v.accent, 0.12)} !important;`);
-    css.push(`  --color-accent-primary-active: ${darken(v.accent, 0.24)} !important;`);
-    css.push(`  --color-accent-primary-selected: ${v.accent} !important;`);
-  }
+  // The accent colour always applies (the Glyde teal by default), so buttons, switches and focus rings
+  // in the browser window match the Glyde theme instead of Firefox's blue and purple.
+  css.push(`  --color-accent-primary: ${v.accent} !important;`);
+  css.push(`  --color-accent-primary-hover: ${darken(v.accent, 0.12)} !important;`);
+  css.push(`  --color-accent-primary-active: ${darken(v.accent, 0.24)} !important;`);
+  css.push(`  --color-accent-primary-selected: ${v.accent} !important;`);
+  css.push(`  --in-content-primary-button-background: ${v.accent} !important;`);
+  css.push(`  --in-content-primary-button-background-hover: ${darken(v.accent, 0.12)} !important;`);
+  css.push(`  --in-content-primary-button-background-active: ${darken(v.accent, 0.24)} !important;`);
+  css.push(`  --focus-outline-color: ${v.accent} !important;`);
   css.push("}");
   let family = "";
   if (v.font === "custom" && v.fontCustom) {
@@ -155,6 +166,7 @@ export const GlydeUI = {
     this._started = true;
     Services.obs.addObserver(this, "browser-delayed-startup-finished");
     Services.prefs.addObserver(PREF, this);
+    this._setNewTabPage();
     for (const win of Services.wm.getEnumerator("navigator:browser")) {
       this.applyToWindow(win);
     }
@@ -163,6 +175,7 @@ export const GlydeUI = {
   observe(subject, topic) {
     if (topic === "browser-delayed-startup-finished") {
       this.applyToWindow(subject);
+      this._onFirstWindow(subject);
     } else if (topic === "nsPref:changed") {
       this.refreshAll();
       for (const fn of this._listeners) {
@@ -172,6 +185,76 @@ export const GlydeUI = {
           console.error(e);
         }
       }
+    }
+  },
+
+  /** New tabs (and the start page) open the Glyde page, and the address bar stays empty on it. */
+  _setNewTabPage() {
+    try {
+      const { AboutNewTab } = ChromeUtils.importESModule("resource:///modules/AboutNewTab.sys.mjs");
+      AboutNewTab.newTabURL = HOME_URL;
+    } catch (e) {
+      console.error("Glyde: could not set the new tab page", e);
+    }
+  },
+
+  /** Runs once per start, for the first normal window: apply the Glyde theme and show the wizard. */
+  _onFirstWindow(win) {
+    if (this._firstDone || win.closed || win.gBrowser === undefined) {
+      return;
+    }
+    if (win.PrivateBrowsingUtils?.isWindowPrivate(win)) {
+      return;
+    }
+    this._firstDone = true;
+    this._applyThemeOnce();
+    if (!Services.prefs.getBoolPref("glyde.welcome.done", false)) {
+      this.openWelcome(win);
+    }
+  },
+
+  async _applyThemeOnce() {
+    try {
+      if (Services.prefs.getBoolPref("glyde.theme.applied", false)) {
+        return;
+      }
+      if (this.values().theme === "glyde") {
+        await this._setTheme("glyde");
+      }
+      Services.prefs.setBoolPref("glyde.theme.applied", true);
+    } catch (e) {
+      console.error("Glyde: could not apply the Glyde theme", e);
+    }
+  },
+
+  /**
+   * Open the welcome wizard (a page on the Glyde website) in a new tab. When the page reaches its
+   * final address, remember that it is finished and show the Glyde start page in that tab instead.
+   */
+  openWelcome(win) {
+    try {
+      win = win || Services.wm.getMostRecentWindow("navigator:browser");
+      const gBrowser = win.gBrowser;
+      const tab = gBrowser.addTrustedTab(WELCOME_URL);
+      gBrowser.selectedTab = tab;
+      const listener = {
+        onLocationChange(browser, webProgress, request, location) {
+          if (browser !== tab.linkedBrowser || !webProgress.isTopLevel) {
+            return;
+          }
+          if (location.spec.split("?")[0] === WELCOME_DONE_URL) {
+            Services.prefs.setBoolPref("glyde.welcome.done", true);
+            gBrowser.removeTabsProgressListener(listener);
+            browser.loadURI(Services.io.newURI(HOME_URL), {
+              triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+            });
+          }
+        },
+      };
+      gBrowser.addTabsProgressListener(listener);
+      tab.addEventListener("TabClose", () => gBrowser.removeTabsProgressListener(listener), { once: true });
+    } catch (e) {
+      console.error("Glyde: could not open the welcome page", e);
     }
   },
 
@@ -262,7 +345,7 @@ export const GlydeUI = {
         break;
       case "theme": {
         // 0 dark, 1 light, 2 follow the system: this is the colour scheme web pages see.
-        p.setIntPref("layout.css.prefers-color-scheme.content-override", { dark: 0, light: 1, system: 2 }[v]);
+        p.setIntPref("layout.css.prefers-color-scheme.content-override", { dark: 0, light: 1, system: 2, glyde: 2 }[v]);
         this._setTheme(v);
         break;
       }
@@ -274,6 +357,11 @@ export const GlydeUI = {
   async _setTheme(name) {
     try {
       const { AddonManager } = ChromeUtils.importESModule("resource://gre/modules/AddonManager.sys.mjs");
+      if (name === "glyde") {
+        // Built-in themes are only installed when asked for.
+        const { BuiltInThemes } = ChromeUtils.importESModule("resource:///modules/BuiltInThemes.sys.mjs");
+        await BuiltInThemes.ensureBuiltInThemes();
+      }
       const addon = await AddonManager.getAddonByID(THEME_IDS[name]);
       if (addon) {
         await addon.enable();

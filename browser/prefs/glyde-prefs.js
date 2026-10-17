@@ -49,10 +49,12 @@ pref("geo.provider.network.url", "");
 pref("sidebar.revamp", true);
 pref("sidebar.verticalTabs", false);
 
-// First run: show the Glyde setup wizard instead of Firefox's welcome pages.
+// First run: Firefox's own welcome pages are off. Glyde opens its own welcome wizard (a page on
+// the Glyde website) once, from GlydeUI.sys.mjs, so it also works for profiles that already exist.
 pref("browser.aboutwelcome.enabled", false);
-pref("startup.homepage_welcome_url", "chrome://browser/content/glyde/welcome.html");
+pref("startup.homepage_welcome_url", "");
 pref("startup.homepage_welcome_url.additional", "");
+pref("glyde.welcome.done", false);
 
 // ---- Low power and low memory: aimed at weak laptops ----
 // Fewer web content processes means much less memory and CPU. Pages still load in parallel.
@@ -76,6 +78,6 @@ pref("network.http.pacing.requests.enabled", false);
 pref("network.http.max-persistent-connections-per-server", 8);
 pref("browser.startup.preXulSkeletonUI", true);
 
-// ---- Startup: land on the Glyde home page ----
+// ---- Startup: land on the Glyde new tab page (the address bar stays empty on it) ----
 pref("browser.startup.homepage", "chrome://browser/content/glyde/home.html");
 pref("browser.startup.page", 1);

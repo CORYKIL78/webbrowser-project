@@ -126,6 +126,42 @@ edit(
     "start-up hook",
 )
 
+# 5. The Glyde theme: a built-in theme next to Alpenglow, listed in the theme config and in jar.mn.
+edit(
+    "browser/themes/addons/jar.mn",
+    "builtin-themes/glyde/manifest.json",
+    "  content/builtin-themes/alpenglow/manifest.json   (alpenglow/manifest.json)\n",
+    """  content/builtin-themes/alpenglow/manifest.json   (alpenglow/manifest.json)
+
+  content/builtin-themes/glyde/manifest.json       (glyde/manifest.json)
+  content/builtin-themes/glyde/icon.svg            (glyde/icon.svg)
+  content/builtin-themes/glyde/preview.svg         (glyde/preview.svg)
+  content/builtin-themes/glyde/background-wave.svg       (glyde/background-wave.svg)
+  content/builtin-themes/glyde/background-wave-dark.svg  (glyde/background-wave-dark.svg)
+""",
+    "theme files in jar.mn",
+)
+edit(
+    "browser/themes/BuiltInThemeConfig.sys.mjs",
+    "glyde-theme@teamcirkle.co.uk",
+    """      path: "resource://builtin-themes/alpenglow/",
+    },
+  ],
+""",
+    """      path: "resource://builtin-themes/alpenglow/",
+    },
+  ],
+  [
+    "glyde-theme@teamcirkle.co.uk",
+    {
+      version: "1.0.0",
+      path: "resource://builtin-themes/glyde/",
+    },
+  ],
+""",
+    "theme config",
+)
+
 if failures:
     print("\nFirefox has changed since this script was written. Fix these edits:", file=sys.stderr)
     for f in failures:

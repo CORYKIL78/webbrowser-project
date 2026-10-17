@@ -3,21 +3,13 @@
  * so it can talk to the Glyde modules directly. All the real work happens in those modules. */
 
 const BASE = "chrome://browser/content/glyde/";
-const { GlydeUI, WALLPAPERS } = ChromeUtils.importESModule(BASE + "GlydeUI.sys.mjs");
+const { GlydeUI } = ChromeUtils.importESModule(BASE + "GlydeUI.sys.mjs");
 const { GlydeAccount } = ChromeUtils.importESModule(BASE + "GlydeAccount.sys.mjs");
 const { GlydeSync } = ChromeUtils.importESModule(BASE + "GlydeSync.sys.mjs");
 const { GlydeUpdate } = ChromeUtils.importESModule(BASE + "GlydeUpdate.sys.mjs");
 
 const $ = id => document.getElementById(id);
 const ACCENTS = ["#0e7c70", "#2563eb", "#7c3aed", "#e11d48", "#ea580c", "#ca8a04", "#475569"];
-const WALL_NAMES = {
-  "glide-lines": "Glide lines",
-  "dusk-hills": "Dusk hills",
-  "soft-glow": "Soft glow",
-  contours: "Contours",
-  "night-arcs": "Night arcs",
-  "paper-waves": "Paper waves",
-};
 
 function say(el, text, isError) {
   el.textContent = text || "";
@@ -64,36 +56,7 @@ function buildControls() {
   $("fontCustom").addEventListener("change", e => GlydeUI.set("fontCustom", e.target.value));
   $("pageFont").addEventListener("change", e => GlydeUI.set("pageFont", e.target.value));
 
-  const walls = $("walls");
-  const make = (value, label, imgSrc) => {
-    const l = document.createElement("label");
-    l.className = "wall";
-    const i = document.createElement("input");
-    i.type = "radio";
-    i.name = "wallpaper";
-    i.value = value;
-    i.addEventListener("change", () => i.checked && GlydeUI.set("wallpaper", value));
-    l.appendChild(i);
-    if (imgSrc) {
-      const img = document.createElement("img");
-      img.src = imgSrc;
-      img.alt = "";
-      l.appendChild(img);
-    } else {
-      const d = document.createElement("div");
-      d.className = "none";
-      d.textContent = "None";
-      l.appendChild(d);
-    }
-    const s = document.createElement("span");
-    s.textContent = label;
-    l.appendChild(s);
-    walls.appendChild(l);
-  };
-  make("none", "Plain", null);
-  for (const w of WALLPAPERS) {
-    make(w, WALL_NAMES[w] || w, BASE + "wallpapers/" + w + ".svg");
-  }
+  $("run-welcome").addEventListener("click", () => GlydeUI.openWelcome());
 }
 
 function renderLook() {
@@ -107,9 +70,6 @@ function renderLook() {
   }
   for (const r of document.querySelectorAll('input[name="tabs"]')) {
     r.checked = r.value === v.tabs;
-  }
-  for (const r of document.querySelectorAll('input[name="wallpaper"]')) {
-    r.checked = r.value === v.wallpaper;
   }
   for (const b of document.querySelectorAll(".sw")) {
     b.setAttribute("aria-checked", String(b.dataset.colour === v.accent));

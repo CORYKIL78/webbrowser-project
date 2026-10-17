@@ -30,6 +30,8 @@ globalThis.Ci = { nsIDOMWindowUtils: { USER_SHEET: 1 }, nsILoginInfo: {}, nsIApp
 globalThis.Cc = {};
 globalThis.Components = { Constructor: () => function (origin, a, realm, user, pass) { Object.assign(this, { origin, realm, username: user, password: pass }); } };
 globalThis.Services = {
+  io: { newURI: spec => ({ spec }) },
+  scriptSecurityManager: { getSystemPrincipal: () => "system" },
   prefs: new FakePrefs(),
   obs: { addObserver() {} },
   wm: { getEnumerator: () => [] },
@@ -44,6 +46,8 @@ globalThis.ChromeUtils = {
   importESModule: url => {
     if (url.includes("Timer")) return { setTimeout, clearTimeout };
     if (url.includes("AddonManager")) return { AddonManager: { getAddonByID: async () => ({ enable: async () => {} }) } };
+    if (url.includes("AboutNewTab")) return { AboutNewTab: globalThis.__newtab };
+    if (url.includes("BuiltInThemes")) return { BuiltInThemes: { ensureBuiltInThemes: async () => { globalThis.__themesEnsured = true; } } };
     if (url.includes("AppConstants")) return { AppConstants: { platform: "linux" } };
     throw new Error("unexpected import " + url);
   },
@@ -72,7 +76,10 @@ test("settings are cleaned: bad values become safe ones", () => {
   assert.equal(UI.sanitise("accent", "red"), "#0e7c70");
   assert.equal(UI.sanitise("accent", "#ABCDEF"), "#abcdef");
   assert.equal(UI.sanitise("tabs", "bottom"), "top");
-  assert.equal(UI.sanitise("wallpaper", "../../x"), "none");
+  assert.equal(UI.sanitise("wallpaper", "../../x"), "glide-lines");
+  assert.equal(UI.sanitise("wallpaper", "none"), "none");
+  assert.equal(UI.sanitise("theme", "glyde"), "glyde");
+  assert.equal(UI.sanitise("theme", "purple"), "glyde");
   assert.equal(UI.sanitise("interfaceScale", 500), 150);
   assert.equal(UI.sanitise("nope", 1), undefined);
 });
@@ -90,7 +97,7 @@ test("style sheet follows the settings", () => {
   assert.match(css, /--color-accent-primary: #2563eb !important/);
   assert.match(css, /font-family: Georgia/);
   const plain = UI.buildCss(UI.DEFAULTS);
-  assert.ok(!/color-accent-primary/.test(plain), "the default accent leaves Firefox's own colours alone");
+  assert.match(plain, /--color-accent-primary: #0e7c70 !important/, "the Glyde teal is the default accent");
   assert.ok(!/font-family/.test(plain));
 });
 
@@ -113,6 +120,34 @@ test("set() stores the value and writes the Firefox preferences that carry it ou
   assert.equal(p.getIntPref("browser.uidensity"), 1);
   assert.equal(UI.GlydeUI.values().density, "compact");
   assert.throws(() => UI.GlydeUI.set("bogus", 1));
+});
+
+test("start up: new tab page is Glyde's own, the welcome wizard opens once, and its last page loads the start page", async () => {
+  globalThis.__newtab = {};
+  UI.GlydeUI.init();
+  assert.equal(__newtab.newTabURL, UI.HOME_URL, "new tabs open the Glyde page (so the address bar stays empty)");
+  const opened = [], loaded = [];
+  let listener;
+  const tab = { linkedBrowser: { loadURI: (u, o) => loaded.push([u.spec, o.triggeringPrincipal]) }, addEventListener() {} };
+  const win = {
+    closed: false,
+    windowUtils: { loadSheetUsingURIString() {}, removeSheetUsingURIString() {} },
+    gBrowser: { addTrustedTab: url => { opened.push(url); return tab; }, addTabsProgressListener: l => { listener = l; }, removeTabsProgressListener() {} },
+  };
+  UI.GlydeUI.observe(win, "browser-delayed-startup-finished");
+  assert.deepEqual(opened, [UI.WELCOME_URL]);
+  assert.equal(UI.WELCOME_URL, "https://glyde.teamcirkle.co.uk/welcome");
+  UI.GlydeUI.observe(win, "browser-delayed-startup-finished");
+  assert.equal(opened.length, 1, "only the first window shows the wizard");
+  // moving around inside the wizard does nothing, the final address finishes it
+  listener.onLocationChange(tab.linkedBrowser, { isTopLevel: true }, null, { spec: UI.WELCOME_URL });
+  assert.equal(Services.prefs.getBoolPref("glyde.welcome.done", false), false);
+  listener.onLocationChange(tab.linkedBrowser, { isTopLevel: true }, null, { spec: UI.WELCOME_DONE_URL });
+  assert.equal(Services.prefs.getBoolPref("glyde.welcome.done", false), true);
+  assert.deepEqual(loaded, [[UI.HOME_URL, "system"]]);
+  await new Promise(r => setTimeout(r, 20));
+  assert.equal(globalThis.__themesEnsured, true, "the built-in Glyde theme is installed and switched on");
+  assert.equal(Services.prefs.getBoolPref("glyde.theme.applied", false), true);
 });
 
 test("PKCE: the challenge is the SHA-256 of the verifier", async () => {

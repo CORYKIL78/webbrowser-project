@@ -47,6 +47,7 @@
     <h2 id="h-look">Look and feel</h2>
 
     <fieldset class="seg" data-key="theme"><legend>Theme</legend>
+      <label><input type="radio" name="theme" value="glyde"><span>Glyde</span></label>
       <label><input type="radio" name="theme" value="system"><span>Match my system</span></label>
       <label><input type="radio" name="theme" value="light"><span>Light</span></label>
       <label><input type="radio" name="theme" value="dark"><span>Dark</span></label>
@@ -116,12 +117,6 @@
     <p class="muted small">Pages that choose their own fonts and sizes keep them.</p>
   </section>
 
-  <section class="card" aria-labelledby="h-wall">
-    <h2 id="h-wall">Wallpaper</h2>
-    <p class="muted small">Shown behind the Glyde home page.</p>
-    <div class="walls" id="walls" role="radiogroup" aria-label="Wallpaper"></div>
-  </section>
-
   <section class="card" aria-labelledby="h-upd">
     <h2 id="h-upd">Updates</h2>
     <p>You have Glyde <strong id="cur-ver"></strong>.</p>
@@ -138,6 +133,8 @@
 
   <section class="card" aria-labelledby="h-about">
     <h2 id="h-about">About</h2>
+    <p class="muted small">Backgrounds for the new tab page are chosen on that page: open a new tab and press Customise.</p>
+    <p><button class="btn ghost" id="run-welcome" type="button">Show the welcome tour again</button></p>
     <p class="muted small">Glyde is made by Cirkle Development Group. It is built on Mozilla open source technology and is not officially associated with Mozilla or its products.</p>
   </section>
 </main>

@@ -92,6 +92,26 @@ TEMPLATE = """<!doctype html>
 """
 
 
+BARE = """<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{title}</title>
+<meta name="description" content="{description}">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0a5c53">
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/welcome.css">
+<script src="/welcome.js" defer></script>
+</head>
+<body>
+{body}
+</body>
+</html>
+"""
+
+
 def parse(path):
     raw = path.read_text(encoding="utf-8")
     head, sep, body = raw.partition("\n---\n")
@@ -123,6 +143,13 @@ def main():
         meta, body = parse(path)
         slug = meta["slug"]
         is_home = slug == "index"
+        if meta.get("layout") == "bare":
+            page = BARE.format(title=html.escape(meta["title"]), description=html.escape(meta["description"]), body=fill(body))
+            target = OUT / f"{slug}.html"
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(page, encoding="utf-8")
+            count += 1
+            continue
         page = TEMPLATE.format(
             title=html.escape(meta["title"] if is_home else f'{meta["title"]} | Glyde'),
             description=html.escape(meta["description"]),
